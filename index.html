@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!--Import Google Icon Font-->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="css/materialize.min.css" media="screen,projection" />
+
+    <!--Let browser know website is optimized for mobile-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <script>
+        function formatBytes(a, b) { if (0 == a) return "0 Bytes"; var c = 1024, d = b || 2, e = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"], f = Math.floor(Math.log(a) / Math.log(c)); return parseFloat((a / Math.pow(c, f)).toFixed(d)).toFixed(4) + " " + e[f] }
+    </script>
+</head>
+
+<body>
+    <!--Import jQuery before materialize.js-->
+    <script type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="js/materialize.min.js"></script>
+
+    <nav class="light-blue lighten-1">
+        <div class="nav-wrapper">
+            <a href="#" class="brand-logo">Logo</a>
+            <a href="#" data-activates="mobile-demo" class="button-collapse">
+                <i class="material-icons">menu</i>
+            </a>
+            <ul class="right">
+                <li>
+                    <a href='#settings_modal' class="modal-trigger" onclick="load_config()">
+                        <i class='material-icons'>settings</i>
+                    </a>
+                </li>
+            </ul>
+            <ul class="side-nav" id="mobile-demo">
+                <li>
+                    <a href="#">Nothing here</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col s12 m9">
+                <h1 class="header center-on-small-only">总览</h1>
+                <div class="row">
+                    <div class="input-field col">
+                        <input placeholder="New task" id="room_id" type="number" class="validate" min=0>
+                        <label for="room_id">Room ID: </label>
+                    </div>
+                    <a class="btn-floating btn-large waves-effect waves-light red modal-trigger" id="open_room" href="#open_room_modal">
+                        <i class="material-icons">add</i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <ul id="tasks" class="collection">
+        </ul>
+    </div>
+
+    <!-- Modal Structure -->
+    <div id="open_room_modal" class="modal">
+        <div class="modal-content">
+            <h4 id="open_room_confirm_title">Confirmation</h4>
+            <p id="open_room_confirm_content">Do you want to start task "room"?</p>
+        </div>
+        <div id="open_room_modal_buttons" class="modal-footer">
+            <a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat'>Yes</a>
+            <a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat'>No</a>
+            <a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat'>Okay</a>
+        </div>
+    </div>
+
+    <div id="settings_modal" class="modal">
+        <div class="modal-content">
+            <h4>Settings</h4>
+            <div class="input-field col s11">
+                <input id="savepath" type="text" class="validate" placeholder="Empty">
+                <label for="savepath">Savepath: </label>
+            </div>
+            <div class="input-field col s11">
+                <input id="open_on_init" type="text" class="validate" placeholder="Empty">
+                <label for="open_on_init">Tasks start during initialization: </label>
+            </div>
+            <!-- <div class="input-field col s12">
+                <select multiple id="open_on_init_multiple_selection">
+                    <option value="" disabled selected>Tasks start during initialization: </option>
+                    <option value="1">Placeholder 1</option>
+                    <option value="2" selected>Placeholder 2</option>
+                    <option value="3" selected>Placeholder 3</option>
+                </select>
+                <label>Tasks start during initialization:</label>
+            </div> -->
+        </div>
+        <div id="open_room_modal_buttons" class="modal-footer">
+            <a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat' onclick="save_config()">Save</a>
+            <a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat'>Exit</a>
+        </div>
+    </div>
+
+    <script>
+            $(".button-collapse").sideNav();
+            $(document).ready(function () {
+                $('select').material_select();
+            });
+            $(document).ready(function () {
+                $('.modal').modal();
+            });
+            function openRoom(room_id) {
+                $.get("/open?room_id=" + room_id, function (data) {
+                    Materialize.toast(data, 5000)
+                })
+            }
+            function closeRoom(room_id) {
+                $.get("/close?room_id=" + room_id, function (data) {
+                    Materialize.toast(data, 5000)
+                })
+            }
+            function confirmCloseRoom(room_id) {
+                $("#open_room_confirm_title").html("Confirmation")
+                $("#open_room_confirm_content").html("Do you want to close task " + room_id + "?")
+                $("#open_room_modal_buttons").html("<a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat' onclick='closeRoom(" + room_id + ")'>Yes</a> \
+                    <a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat'>No</a>")
+                $('#open_room_modal').modal('open');
+            }
+            function load_config() {
+                $.ajax({
+                    url: "/get_config",
+                    dataType: 'json',
+                    async: false,
+                    success: function (data) {
+                        $("#savepath").val(data['savepath'])
+                        $("#open_on_init").val(data['load_on_init'].join(","))
+                    }
+                });
+            }
+            function save_config() {
+                savepath = $("#savepath").val()
+                open_on_init = $("#open_on_init").val().split(",")
+                open_on_init = $.map(open_on_init, function (v) {
+                    var i = parseInt(v)
+                    if (isNaN(i)) {
+                        return -1
+                    } else {
+                        return i
+                    }
+                })
+                if (open_on_init.indexOf(-1) > -1) {
+                    Materialize.toast('Invalid room IDs!', 5000)
+                    return
+                }
+                json = JSON.stringify({
+                    "savepath": savepath, 
+                    "load_on_init": open_on_init
+                })
+                $.get("/save_config?json="+encodeURIComponent(json), function (data) {
+                    Materialize.toast(data, 5000)
+                })
+            }
+            $("#open_room").click(function () {
+                var room_id = $("#room_id").val()
+                if (room_id) {
+                    $("#open_room_confirm_title").html("Confirmation")
+                    $("#open_room_confirm_content").html("Do you want to start task " + room_id + "?")
+                    $("#open_room_modal_buttons").html("<a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat' onclick='openRoom(" + room_id + ")'>Yes</a> \
+                        <a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat'>No</a>")
+                } else {
+                    $("#open_room_confirm_title").html("Error")
+                    $("#open_room_confirm_content").html("Please enter room ID.")
+                    $("#open_room_modal_buttons").html("<a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat'>Okay</a>")
+                }
+            })
+            var lastSortedAll = {}
+            function update() {
+                var processes = []
+                var status = {}
+                var html = ""
+
+                $.ajax({
+                    url: "/processes",
+                    dataType: 'json',
+                    async: false,
+                    success: function (data) {
+                        processes = data
+                    }
+                });
+                $.ajax({
+                    url: "/status",
+                    dataType: 'json',
+                    async: false,
+                    success: function (data) {
+                        $.each(data, function (key, val) {
+                            status[key] = {
+                                "time": val["time"],
+                                "downloaded_size": val["downloaded_size"]
+                            }
+                        });
+                    }
+                });
+                
+                running_status = $.extend({}, status)
+                $.each(processes, function (i, room_id) {
+                    if (room_id in status) {
+                    } else {
+                        status[room_id] = {
+                            "time": 0,
+                            "downloaded_size": 0
+                        }
+                    }
+                })
+
+                running = []
+                waiting = []
+                archiving = []
+                $.each(status, function (room_id, info) {
+                    if (processes.indexOf(room_id) > -1 & room_id in running_status) {
+                        running[running.length] = room_id
+                    } else if (processes.indexOf(room_id) > -1) {
+                        waiting[waiting.length] = room_id
+                    } else if (room_id in status) {
+                        archiving[archiving.length] = room_id
+                    }
+                })
+
+                sortedAll = running.concat(waiting).concat(archiving)
+                $.each(sortedAll, function (i, room_id) {
+                    info = status[room_id]
+                    content = `
+                        <div>
+                            <span>${room_id}</span>
+                            <div class='secondary-content'>
+                                <span>${formatBytes(info["downloaded_size"], 4)}</span>
+                                ${processes.indexOf(room_id) > -1 ? `<a href='#!' class='secondary-content' onclick='confirmCloseRoom(${room_id})'><i class='material-icons'>close</i></a>` : ""}
+                            </div>
+                        </div>`
+                    if (JSON.stringify(lastSortedAll) == JSON.stringify(sortedAll)) { // no new tasks
+                        $("#room" + room_id).html(content)
+                    } else {
+                        html += `<li class='collection-item' id='room${room_id}'>${content}</li>`
+                    }
+                })
+                if (html != "") $("#tasks").html(html)
+
+                lastSortedAll = sortedAll
+            }
+            setInterval(update, 1000)
+            update()
+    </script>
+
+</html>

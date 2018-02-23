@@ -1,0 +1,11 @@
+import os
+import sys
+import time
+import subprocess
+import atexit
+import signal
+import argparse
+
+while True:
+    subprocess.Popen("python roku.py " + " ".join(sys.argv[1:])).wait()
+    print("Restarting.")
