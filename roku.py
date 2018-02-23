@@ -1,17 +1,17 @@
 # -*- coding:utf-8 -*-
+import argparse
 import asyncio
 import atexit
-import json
-import sys
-import urllib.request
-import time
-import os
-import argparse
 import datetime
+import json
+import os
+import signal
+import sys
+import time
+import urllib.request
 
 import danmaku
-from _logging import log, verbose, error
-
+from _logging import error, log, verbose
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-r", "--room-id", action="store", dest="room_id", type=int, required=True)
@@ -133,6 +133,19 @@ for on_start in on_starts:
         on_start(**globals())
     except Exception as e:
         error(e)
+        
+on_ended = False
+def on_end():
+    global on_ended
+    if not on_ended:
+        for on_end in on_ends:
+            on_ended = True
+            try:
+                on_end()
+            except Exception as e:
+                error(e)
+signal.signal(signal.SIGTERM, on_end)
+atexit.register(on_end)
 
 asyncio.new_event_loop()
 loop = asyncio.get_event_loop()
@@ -155,9 +168,5 @@ try:
     loop.run_until_complete(main(tasks, loop))
 finally:
     loop.close()
-    for on_end in on_ends:
-        try:
-            on_end()
-        except Exception as e:
-            error(e)
+    on_end()
     log("Closed.")
