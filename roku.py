@@ -27,7 +27,7 @@ on_starts = []
 on_ends = []
 on_danmakus = []
 on_chunks = []
-log("Loading modules.")
+verbose("Loading modules.")
 for module_file in os.listdir("module"):
     filename, ext = os.path.splitext(module_file)
     if filename == "__init__" or ext != ".py":
@@ -35,22 +35,22 @@ for module_file in os.listdir("module"):
     module = __import__("module.%s" % filename)
     try:
         on_starts.append(getattr(module, filename).on_start)
-        log("loaded %s.on_start" % os.path.splitext(module_file)[0])
+        verbose("loaded %s.on_start" % os.path.splitext(module_file)[0])
     except AttributeError:
         pass
     try:
         on_ends.append(getattr(module, filename).on_end)
-        log("loaded %s.on_end" % os.path.splitext(module_file)[0])
+        verbose("loaded %s.on_end" % os.path.splitext(module_file)[0])
     except AttributeError:
         pass
     try:
         on_danmakus.append(getattr(module, filename).on_danmaku)
-        log("loaded %s.on_danmaku" % os.path.splitext(module_file)[0])
+        verbose("loaded %s.on_danmaku" % os.path.splitext(module_file)[0])
     except AttributeError:
         pass
     try:
         on_chunks.append(getattr(module, filename).on_chunk)
-        log("loaded %s.on_chunk" % os.path.splitext(module_file)[0])
+        verbose("loaded %s.on_chunk" % os.path.splitext(module_file)[0])
     except AttributeError:
         pass
 log("Complete loading modules.")
@@ -109,9 +109,9 @@ async def download_flv(flv_url):
 
 log("Starting.")
 (room_id, uid) = get_ids(room_id)
-verbose("Got room ID: %s, UID: %s" % (room_id, uid))
+log("Got room ID: %s, UID: %s" % (room_id, uid))
 flv_url = get_flv_url(room_id)
-verbose("Got flv URL: %s" % flv_url)
+log("Got flv URL: %s" % flv_url)
 is_living_resp = is_living(uid)
 title = None
 if is_living_resp:
@@ -138,8 +138,8 @@ on_ended = False
 def on_end():
     global on_ended
     if not on_ended:
+        on_ended = True
         for on_end in on_ends:
-            on_ended = True
             try:
                 on_end()
             except Exception as e:
