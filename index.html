@@ -3,7 +3,30 @@
 
 <head>
     <!--Import Google Icon Font-->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'Material Icons';
+            font-style: normal;
+            font-weight: 400;
+            src: url(fonts/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format('woff2');
+        }
+
+        .material-icons {
+            font-family: 'Material Icons';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+    </style>
     <!--Import materialize.css-->
     <link type="text/css" rel="stylesheet" href="css/materialize.min.css" media="screen,projection" />
 
@@ -101,133 +124,133 @@
     </div>
 
     <script>
-            $(".button-collapse").sideNav();
-            $(document).ready(function () {
-                $('select').material_select();
-            });
-            $(document).ready(function () {
-                $('.modal').modal();
-            });
-            function openRoom(room_id) {
-                $.get("/open?room_id=" + room_id, function (data) {
-                    Materialize.toast(data, 5000)
-                })
-            }
-            function closeRoom(room_id) {
-                $.get("/close?room_id=" + room_id, function (data) {
-                    Materialize.toast(data, 5000)
-                })
-            }
-            function confirmCloseRoom(room_id) {
-                $("#open_room_confirm_title").html("Confirmation")
-                $("#open_room_confirm_content").html("Do you want to close task " + room_id + "?")
-                $("#open_room_modal_buttons").html("<a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat' onclick='closeRoom(" + room_id + ")'>Yes</a> \
+        $(".button-collapse").sideNav();
+        $(document).ready(function () {
+            $('select').material_select();
+        });
+        $(document).ready(function () {
+            $('.modal').modal();
+        });
+        function openRoom(room_id) {
+            $.get("/open?room_id=" + room_id, function (data) {
+                Materialize.toast(data, 5000)
+            })
+        }
+        function closeRoom(room_id) {
+            $.get("/close?room_id=" + room_id, function (data) {
+                Materialize.toast(data, 5000)
+            })
+        }
+        function confirmCloseRoom(room_id) {
+            $("#open_room_confirm_title").html("Confirmation")
+            $("#open_room_confirm_content").html("Do you want to close task " + room_id + "?")
+            $("#open_room_modal_buttons").html("<a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat' onclick='closeRoom(" + room_id + ")'>Yes</a> \
                     <a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat'>No</a>")
-                $('#open_room_modal').modal('open');
-            }
-            function load_config() {
-                $.ajax({
-                    url: "/get_config",
-                    dataType: 'json',
-                    async: false,
-                    success: function (data) {
-                        $("#savepath").val(data['savepath'])
-                        $("#open_on_init").val(data['load_on_init'].join(","))
-                    }
-                });
-            }
-            function save_config() {
-                savepath = $("#savepath").val()
-                open_on_init = $("#open_on_init").val().split(",")
-                open_on_init = $.map(open_on_init, function (v) {
-                    var i = parseInt(v)
-                    if (isNaN(i)) {
-                        return -1
-                    } else {
-                        return i
-                    }
-                })
-                if (open_on_init.indexOf(-1) > -1) {
-                    Materialize.toast('Invalid room IDs!', 5000)
-                    return
+            $('#open_room_modal').modal('open');
+        }
+        function load_config() {
+            $.ajax({
+                url: "/get_config",
+                dataType: 'json',
+                async: false,
+                success: function (data) {
+                    $("#savepath").val(data['savepath'])
+                    $("#open_on_init").val(data['load_on_init'].join(","))
                 }
-                json = JSON.stringify({
-                    "savepath": savepath, 
-                    "load_on_init": open_on_init
-                })
-                $.get("/save_config?json="+encodeURIComponent(json), function (data) {
-                    Materialize.toast(data, 5000)
-                })
-            }
-            $("#open_room").click(function () {
-                var room_id = $("#room_id").val()
-                if (room_id) {
-                    $("#open_room_confirm_title").html("Confirmation")
-                    $("#open_room_confirm_content").html("Do you want to start task " + room_id + "?")
-                    $("#open_room_modal_buttons").html("<a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat' onclick='openRoom(" + room_id + ")'>Yes</a> \
-                        <a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat'>No</a>")
+            });
+        }
+        function save_config() {
+            savepath = $("#savepath").val()
+            open_on_init = $("#open_on_init").val().split(",")
+            open_on_init = $.map(open_on_init, function (v) {
+                var i = parseInt(v)
+                if (isNaN(i)) {
+                    return -1
                 } else {
-                    $("#open_room_confirm_title").html("Error")
-                    $("#open_room_confirm_content").html("Please enter room ID.")
-                    $("#open_room_modal_buttons").html("<a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat'>Okay</a>")
+                    return i
                 }
             })
-            var lastSortedAll = {}
-            function update() {
-                var processes = []
-                var status = {}
-                var html = ""
+            if (open_on_init.indexOf(-1) > -1) {
+                Materialize.toast('Invalid room IDs!', 5000)
+                return
+            }
+            json = JSON.stringify({
+                "savepath": savepath,
+                "load_on_init": open_on_init
+            })
+            $.get("/save_config?json=" + encodeURIComponent(json), function (data) {
+                Materialize.toast(data, 5000)
+            })
+        }
+        $("#open_room").click(function () {
+            var room_id = $("#room_id").val()
+            if (room_id) {
+                $("#open_room_confirm_title").html("Confirmation")
+                $("#open_room_confirm_content").html("Do you want to start task " + room_id + "?")
+                $("#open_room_modal_buttons").html("<a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat' onclick='openRoom(" + room_id + ")'>Yes</a> \
+                        <a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat'>No</a>")
+            } else {
+                $("#open_room_confirm_title").html("Error")
+                $("#open_room_confirm_content").html("Please enter room ID.")
+                $("#open_room_modal_buttons").html("<a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat'>Okay</a>")
+            }
+        })
+        var lastSortedAll = {}
+        function update() {
+            var processes = []
+            var status = {}
+            var html = ""
 
-                $.ajax({
-                    url: "/processes",
-                    dataType: 'json',
-                    async: false,
-                    success: function (data) {
-                        processes = data
-                    }
-                });
-                $.ajax({
-                    url: "/status",
-                    dataType: 'json',
-                    async: false,
-                    success: function (data) {
-                        $.each(data, function (key, val) {
-                            status[key] = {
-                                "time": val["time"],
-                                "downloaded_size": val["downloaded_size"]
-                            }
-                        });
-                    }
-                });
-                
-                running_status = $.extend({}, status)
-                $.each(processes, function (i, room_id) {
-                    if (room_id in status) {
-                    } else {
-                        status[room_id] = {
-                            "time": 0,
-                            "downloaded_size": 0
+            $.ajax({
+                url: "/processes",
+                dataType: 'json',
+                async: false,
+                success: function (data) {
+                    processes = data
+                }
+            });
+            $.ajax({
+                url: "/status",
+                dataType: 'json',
+                async: false,
+                success: function (data) {
+                    $.each(data, function (key, val) {
+                        status[key] = {
+                            "time": val["time"],
+                            "downloaded_size": val["downloaded_size"]
                         }
-                    }
-                })
+                    });
+                }
+            });
 
-                running = []
-                waiting = []
-                archiving = []
-                $.each(status, function (room_id, info) {
-                    if (processes.indexOf(room_id) > -1 & room_id in running_status) {
-                        running[running.length] = room_id
-                    } else if (processes.indexOf(room_id) > -1) {
-                        waiting[waiting.length] = room_id
-                    } else if (room_id in status) {
-                        archiving[archiving.length] = room_id
+            running_status = $.extend({}, status)
+            $.each(processes, function (i, room_id) {
+                if (room_id in status) {
+                } else {
+                    status[room_id] = {
+                        "time": 0,
+                        "downloaded_size": 0
                     }
-                })
+                }
+            })
 
-                sortedAll = running.concat(waiting).concat(archiving)
-                $.each(sortedAll, function (i, room_id) {
-                    info = status[room_id]
-                    content = `
+            running = []
+            waiting = []
+            archiving = []
+            $.each(status, function (room_id, info) {
+                if (processes.indexOf(room_id) > -1 & room_id in running_status) {
+                    running[running.length] = room_id
+                } else if (processes.indexOf(room_id) > -1) {
+                    waiting[waiting.length] = room_id
+                } else if (room_id in status) {
+                    archiving[archiving.length] = room_id
+                }
+            })
+
+            sortedAll = running.concat(waiting).concat(archiving)
+            $.each(sortedAll, function (i, room_id) {
+                info = status[room_id]
+                content = `
                         <div>
                             <span>${room_id}</span>
                             <div class='secondary-content'>
@@ -235,18 +258,18 @@
                                 ${processes.indexOf(room_id) > -1 ? `<a href='#!' class='secondary-content' onclick='confirmCloseRoom(${room_id})'><i class='material-icons'>close</i></a>` : ""}
                             </div>
                         </div>`
-                    if (JSON.stringify(lastSortedAll) == JSON.stringify(sortedAll)) { // no new tasks
-                        $("#room" + room_id).html(content)
-                    } else {
-                        html += `<li class='collection-item' id='room${room_id}'>${content}</li>`
-                    }
-                })
-                if (html != "") $("#tasks").html(html)
+                if (JSON.stringify(lastSortedAll) == JSON.stringify(sortedAll)) { // no new tasks
+                    $("#room" + room_id).html(content)
+                } else {
+                    html += `<li class='collection-item' id='room${room_id}'>${content}</li>`
+                }
+            })
+            if (html != "") $("#tasks").html(html)
 
-                lastSortedAll = sortedAll
-            }
-            setInterval(update, 1000)
-            update()
+            lastSortedAll = sortedAll
+        }
+        setInterval(update, 1000)
+        update()
     </script>
 
 </html>

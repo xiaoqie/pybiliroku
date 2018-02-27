@@ -1,12 +1,16 @@
 import datetime
 
 
+VERBOSE = False
+
+
 def time():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 def verbose(msg):
-    print(time() + " VERBOSE: %s" % msg)
+    if VERBOSE:
+        print(time() + " VERBOSE: %s" % msg)
 
 
 def log(msg):

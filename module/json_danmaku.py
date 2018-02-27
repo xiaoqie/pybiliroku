@@ -2,6 +2,7 @@
 import time
 import json
 
+enabled = False
 
 class Danmaku:
     def __init__(self, json_obj):

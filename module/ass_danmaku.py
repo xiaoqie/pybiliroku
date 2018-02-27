@@ -2,6 +2,7 @@
 import time
 import math
 
+
 class Danmaku:
     def __init__(self, json_obj):
         self.is_danmaku = json_obj['cmd'] == "DANMU_MSG"
@@ -73,7 +74,8 @@ def on_danmaku(json_obj):
     if danmaku.is_danmaku:
         text = danmaku.text
         sec = danmaku.timestamp - start_timestamp  # wait a sec, why does this work?
-        onscreen = {j: [data for data in onscreen[j] if sec - data[0] < 10] for j in range(21)}  # remove old off screen text
+        onscreen = {j: [data for data in onscreen[j] if sec - data[0] < 10]
+                    for j in range(21)}  # remove old off screen text
         for j in range(21):  # 720/35 = 21 columns
             for text_on_screen in onscreen[j]:
                 if intersect(text_on_screen, (sec, len(text))):
@@ -97,7 +99,7 @@ def on_danmaku(json_obj):
         file.write(text)
         file.write('\n')
         file.flush()
-    
+
 
 def on_end():
     global file

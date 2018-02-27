@@ -11,7 +11,7 @@ from _logging import log, verbose, error
 
 
 def get_cmt_server(room_id):
-    with urllib.request.urlopen("http://live.bilibili.com/api/player?id=cid:%d" % room_id) as conn:
+    with urllib.request.urlopen("http://live.bilibili.com/api/player?id=cid:%d" % room_id, timeout=5) as conn:
         content = conn.read().decode("utf-8")
         content = "<root>%s</root>" % content
         root = xml.etree.ElementTree.fromstring(content)
@@ -46,7 +46,7 @@ reader = None
 writer = None
 
 
-def connect(room_id, loop, on_danmakus):
+def connect(room_id, loop, on_danmaku):
     async def tcp_message_client(loop):
         global reader, writer
         cmt_server = get_cmt_server(room_id)
@@ -80,11 +80,7 @@ def connect(room_id, loop, on_danmakus):
             verbose("type id: %d, length: %d" % (type_id, len(data)))
             if type_id == 4:
                 json_obj = json.loads(data.decode("utf-8"))
-                for on_danmaku in on_danmakus:
-                    try:
-                        on_danmaku(json_obj)
-                    except Exception as e:
-                        error(e)
+                on_danmaku(json_obj)
 
     async def heartbeat(loop):
         global reader, writer
@@ -92,7 +88,7 @@ def connect(room_id, loop, on_danmakus):
             while reader is None and writer is None:
                 await asyncio.sleep(0)
             send_socket_data(writer.write, 2)
-            verbose("sent heartbeat")
+            log("sent cmt_server heartbeat")
             await asyncio.sleep(30)
 
     return [asyncio.ensure_future(tcp_message_client(loop), loop=loop), asyncio.ensure_future(heartbeat(loop), loop=loop)]
