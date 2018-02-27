@@ -1,20 +1,60 @@
-"""
-/report?room_id=XXX&downloaded_size=XXX
-/status
-/open?room_id=XXX
-/close?room_id=XXX
-/processes
-"""
-from http.server import HTTPServer, SimpleHTTPRequestHandler
-import urllib
-import time
+from aiohttp import web
 import json
-import subprocess
-import os
 import signal
 import psutil
-import urllib.parse
 import subprocess
+import os
+import time
+import urllib.parse
+
+
+def IndexMiddleware(index='index.html'):
+    """Middleware to serve index files (e.g. index.html) when static directories are requested.
+
+    Usage:
+    ::
+
+        from aiohttp import web
+        from aiohttp_index import IndexMiddleware
+        app = web.Application(middlewares=[IndexMiddleware()])
+        app.router.add_static('/', 'static')
+
+    ``app`` will now serve ``static/index.html`` when ``/`` is requested.
+
+    :param str index: The name of a directory's index file.
+    :returns: The middleware factory.
+    :rtype: function
+
+    Borrowed from: http://pythonhosted.org/aiohttp-index/_modules/aiohttp_index/index.html#IndexMiddleware
+    License?
+    """
+    async def middleware_factory(app, handler):
+        """Middleware factory method.
+
+        :type app: aiohttp.web.Application
+        :type handler: function
+        :returns: The retry handler.
+        :rtype: function
+        """
+        async def index_handler(request):
+            """Handler to serve index files (index.html) for static directories.
+
+            :type request: aiohttp.web.Request
+            :returns: The result of the next handler in the chain.
+            :rtype: aiohttp.web.Response
+            """
+            try:
+                filename = request.match_info['filename']
+                if not filename:
+                    filename = index
+                if filename.endswith('/'):
+                    filename += index
+                request.match_info['filename'] = filename
+            except KeyError:
+                pass
+            return await handler(request)
+        return index_handler
+    return middleware_factory
 
 
 def kill_proc_tree(pid, sig=signal.SIGTERM, include_parent=True,
@@ -35,24 +75,40 @@ def kill_proc_tree(pid, sig=signal.SIGTERM, include_parent=True,
     gone, alive = psutil.wait_procs(children, timeout=timeout,
                                     callback=on_terminate)
     return (gone, alive)
-kill = kill_proc_tree
+
+
+status = {}
+processes = {}
+port = 2004
+
+
+def report(room_id, downloaded_size, start_timestamp):
+    status[room_id] = {'downloaded_size': downloaded_size,
+                       "time": time.time(), "start_timestamp": start_timestamp}
+    return True
 
 
 def open_room(room_id):
-    if room_id not in MyHandler.processes:
-        MyHandler.processes[room_id] = subprocess.Popen(
-            "python roku_loop.py --room-id %s --savepath %s" % (room_id, get_config()['savepath']))
+    if room_id not in processes:
+        processes[room_id] = subprocess.Popen([
+            "python", "roku_loop.py",
+            "--room-id", str(room_id),
+            "--savepath", get_config()['savepath'],
+            "--port", str(port)
+        ])
         return True
     else:
         return False
 
-def close(room_id):
-    if room_id in MyHandler.processes:
-        process = MyHandler.processes.pop(room_id)
-        kill(process.pid)
+
+def close_room(room_id):
+    if room_id in processes:
+        process = processes.pop(room_id)
+        gone, alive = kill_proc_tree(process.pid)
         return True
     else:
         return False
+
 
 def get_config():
     if os.path.exists("config.json"):
@@ -66,6 +122,7 @@ def get_config():
         json_obj['load_on_init'] = []
     return json_obj
 
+
 def save_config(json_obj):
     if "savepath" not in json_obj:
         json_obj['savepath'] = "streams/{room_id}/{start_time}-{title}"
@@ -75,101 +132,72 @@ def save_config(json_obj):
         config_file.write(json.dumps(json_obj, indent=4))
 
 
-
-class MyHandler(SimpleHTTPRequestHandler):
-    status = {}
-    processes = {}
-
-    def process_processes(self):
-        """
-        remove inactive processes
-        """
-        for k, v in MyHandler.processes.items():  # remove inactive processes
-            if not psutil.pid_exists(v.pid):
-                MyHandler.processes.pop(k)
-
-    def report(self, room_id, downloaded_size, start_timestamp):
-        MyHandler.status[room_id] = {'downloaded_size': downloaded_size, "time": time.time(), "start_timestamp": start_timestamp}
-        return True
-
-    def do_GET(self):
-        self.process_processes()
-
-        parsed_url = urllib.parse.urlparse(self.path)
-        parsed_qs = urllib.parse.parse_qs(parsed_url.query)
-        path = parsed_url.path
-
-        if path in ["/report", "/status", "/open", "/close", "/processes", "/get_config", "/save_config"]:
-            self.send_response(200)
-            self.send_header('Content-type', 'text/html')
-            self.end_headers()
-
-        if path == "/report":
-            if not ("room_id" in parsed_qs and "downloaded_size" in parsed_qs and "start_timestamp" in parsed_qs):
-                self.wfile.write("fail".encode())
-                return
-            room_id = parsed_qs["room_id"][0]
-            downloaded_size = parsed_qs["downloaded_size"][0]
-            start_timestamp = parsed_qs["start_timestamp"][0]
-            self.report(room_id, downloaded_size, start_timestamp)
-            self.wfile.write("success".encode())
-            return
-        if path == "/status":
-            # MyHandler.status = {k: v for k, v in MyHandler.status.items() if time.time() - v['time'] < 10}
-            self.wfile.write(json.dumps(MyHandler.status).encode())
-            return
-        if path == "/open":
-            room_id = parsed_qs["room_id"][0]
-            if open_room(room_id):
-                self.wfile.write("success".encode())
-            else:
-                self.wfile.write("duplicate".encode())
-            return
-        if path == "/close":
-            room_id = parsed_qs["room_id"][0]
-            if close(room_id):
-                self.wfile.write("success".encode())
-            else:
-                self.wfile.write("no such process".encode())
-            return
-        if path == "/processes":
-            self.wfile.write(json.dumps(list(MyHandler.processes.keys())).encode())
-            return
-        if path == "/get_config":
-            self.wfile.write(json.dumps(get_config()).encode())
-            return
-        if path == "/save_config":
-            if "json" not in parsed_qs:
-                self.wfile.write("no argument".encode())
-                return
-            json_content = urllib.parse.unquote_plus(parsed_qs["json"][0])
-            try:
-                json_obj = json.loads(json_content)
-            except Exception as e:
-                self.wfile.write("invalid json".encode())
-            save_config(json_obj)
-            self.wfile.write("success".encode())
-            return
-
-        super(MyHandler, self).do_GET()
-
-    def do_HEAD(self):
-        super(MyHandler, self).do_HEAD()
+async def do_report(request):
+    if not ("room_id" in request.query and
+            "downloaded_size" in request.query and
+            "start_timestamp" in request.query):
+        return web.Response(text='fail')
+    report(request.query["room_id"], request.query["downloaded_size"],
+           request.query["start_timestamp"])
+    return web.Response(text='success')
 
 
-def run(server_class=HTTPServer, handler_class=MyHandler, port=80):
-    server_address = ('0.0.0.0', port)
-    httpd = server_class(server_address, handler_class)
-    print('Starting httpd...')
+async def do_status(request):
+    return web.Response(text=json.dumps(status))
 
-    load_on_init = get_config()["load_on_init"]
-    print("Opening initialization tasks.")
-    for room_id in load_on_init:
-        if open_room(str(room_id)):
-            print("Opened room_id %d during initialization." % room_id)
-        else:
-            print("Failed to open room_id %d during initialization." % room_id)
 
-    httpd.serve_forever()
+async def do_open(request):
+    room_id = request.query["room_id"]
+    if open_room(room_id):
+        return web.Response(text='success')
+    else:
+        return web.Response(text='duplicate')
 
-run(port=2004)
+
+async def do_close(request):
+    room_id = request.query["room_id"]
+    if close_room(room_id):
+        return web.Response(text='success')
+    else:
+        return web.Response(text='no such process')
+
+
+async def do_processes(request):
+    return web.Response(text=json.dumps(list(processes.keys())))
+
+
+async def do_get_config(request):
+    return web.Response(text=json.dumps(get_config()))
+
+
+async def do_save_config(request):
+    if "json" not in request.query:
+        return web.Response(text="no argument")
+    json_content = urllib.parse.unquote_plus(request.query["json"])
+    try:
+        json_obj = json.loads(json_content)
+    except Exception as e:
+        return web.Response(text="invalid json")
+    save_config(json_obj)
+    return web.Response(text="success")
+
+
+app = web.Application(middlewares=[IndexMiddleware()])
+app.router.add_get('/report', do_report)
+app.router.add_get("/status", do_status)
+app.router.add_get("/open", do_open)
+app.router.add_get("/close", do_close)
+app.router.add_get("/processes", do_processes)
+app.router.add_get("/get_config", do_get_config)
+app.router.add_get("/save_config", do_save_config)
+app.router.add_static('/', path='.')
+
+load_on_init = get_config()["load_on_init"]
+print("Opening initialization tasks.")
+for room_id in load_on_init:
+    if open_room(str(room_id)):
+        print("Opened room_id %d during initialization." % room_id)
+    else:
+        print("Failed to open room_id %d during initialization." % room_id)
+
+web.run_app(app, host='0.0.0.0', port=port)
