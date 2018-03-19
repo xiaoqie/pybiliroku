@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 import time
 import math
-
+import os
 
 class Danmaku:
     def __init__(self, json_obj):
