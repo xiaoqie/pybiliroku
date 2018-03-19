@@ -17,10 +17,11 @@ class Danmaku:
 start_timestamp = None
 file = None
 ndanmaku = 0
+savepath = None
 
 
 def on_start(**kargs):
-    global start_timestamp, file
+    global start_timestamp, file, savepath
     start_timestamp = kargs['start_timestamp']
     savepath = kargs['savepath'] + '.json'
     file = open(savepath, 'w', encoding='utf-8')
@@ -46,3 +47,7 @@ def on_end():
     file.write("]")
     file.flush()
     file.close()
+
+    if ndanmaku == 0:
+        os.remove(savepath)
+        print("removed empty %s" % savepath)

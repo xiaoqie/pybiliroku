@@ -43,10 +43,12 @@ def intersect(old, new):
 start_timestamp = None
 file = None
 onscreen = {j: [] for j in range(21)}  # 720/35 = 21 columns
+danmaku_count = 0
+savepath = None
 
 
 def on_start(**kargs):
-    global start_timestamp, file
+    global start_timestamp, file, savepath
     start_timestamp = kargs['start_timestamp']
     savepath = kargs['savepath'] + '.ass'
     file = open(savepath, 'w', encoding='utf-8')
@@ -69,9 +71,11 @@ Format: Layer, Start, End, Style, Actor, MarginL, MarginR, MarginV, Effect, Text
 
 
 def on_danmaku(json_obj):
-    global file, onscreen
+    global file, onscreen, danmaku_count
     danmaku = Danmaku(json_obj)
     if danmaku.is_danmaku:
+        danmaku_count += 1
+
         text = danmaku.text
         sec = danmaku.timestamp - start_timestamp  # wait a sec, why does this work?
         onscreen = {j: [data for data in onscreen[j] if sec - data[0] < 10]
@@ -104,3 +108,7 @@ def on_danmaku(json_obj):
 def on_end():
     global file
     file.close()
+
+    if danmaku_count == 0:
+        os.remove(savepath)
+        print("removed empty %s" % savepath)
