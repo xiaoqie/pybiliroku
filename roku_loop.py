@@ -8,4 +8,4 @@ import argparse
 
 while True:
     subprocess.Popen(["python", "roku.py"] + sys.argv[1:]).wait()
-    print("Restarting.")
+    print("Restarting %s" % ' '.join(["python", "roku.py"] + sys.argv[1:]))

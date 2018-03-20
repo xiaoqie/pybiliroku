@@ -75,18 +75,18 @@ async def download_flv(flv_url):
         await asyncio.sleep(0)
 
 
-log("Starting.")
+verbose("Starting.")
 (room_id, uid) = get_ids(room_id)
-log("Got room ID: %s, UID: %s" % (room_id, uid))
+verbose("Got room ID: %s, UID: %s" % (room_id, uid))
 flv_url = get_flv_url(room_id)
-log("Got flv URL: %s" % flv_url)
+verbose("Got flv URL: %s" % flv_url)
 is_living_resp = is_living(uid)
 title = None
 if is_living_resp:
     title = is_living_resp['title']
     log("Title: %s" % title)
 else:
-    log("UID:%s, Room ID:%s is not streaming, waiting for 30 seconds and closing." % (
+    verbose("UID:%s, Room ID:%s is not streaming, waiting for 30 seconds and closing." % (
         uid, original_room_id))
     # The sleep logic comes here, not in roku_loop.py
     # Because if it is streaming, this shouldn't wait to restart.

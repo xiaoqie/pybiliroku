@@ -49,7 +49,7 @@ for module_file in os.listdir("module"):
         verbose("loaded %s.on_chunk" % os.path.splitext(module_file)[0])
     except AttributeError:
         pass
-log("Complete loading modules.")
+verbose("Complete loading modules.")
 
 
 def on_start(**kwargs):
