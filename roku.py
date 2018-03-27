@@ -9,6 +9,7 @@ import signal
 import sys
 import time
 import urllib.request
+import random
 
 import danmaku
 import modules
@@ -49,7 +50,7 @@ def get_flv_url(room_id):
         content = conn.read().decode("utf-8")
         result = json.loads(content)
         verbose("playurl returns %s" % result)
-        return result["durl"][0]["url"]
+        return random.choice(result["durl"])["url"]  # we don't know which url is valid, so random choose one
 
 
 def is_living(uid):
