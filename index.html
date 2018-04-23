@@ -280,7 +280,7 @@
 
             running = []
             waiting = []
-            $.each(status, function (room_id, info) {
+            $.each(processes, function (i, room_id) {
                 if (status[room_id]["download_speed"] == 0) {
                     waiting[waiting.length] = room_id
                 } else {
