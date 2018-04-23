@@ -195,22 +195,35 @@ async def do_save_config(request):
     return web.Response(text="success")
 
 
+user_info_cache = {}
 async def do_get_user_info(request):
-    room_id = request.query["room_id"]
-    with urllib.request.urlopen("https://api.live.bilibili.com/room/v1/Room/room_init?id=%s" % room_id, timeout=5) as conn:
+    original_room_id = request.query["room_id"]
+    if original_room_id in user_info_cache:
+        return web.Response(text=user_info_cache[original_room_id])
+
+    with urllib.request.urlopen("https://api.live.bilibili.com/room/v1/Room/room_init?id=%s" % original_room_id, timeout=5) as conn:
         content = conn.read().decode("utf-8")
         result = json.loads(content)
         if result['msg'] != 'ok':
-            raise ValueError(
-                "Error while requesting room ID:%s" % result['msg'])
-        _, uid = (result['data']['room_id'], result['data']['uid'])
-    with urllib.request.urlopen("http://live.bilibili.com/bili/isliving/%d" % uid, timeout=5) as conn:
-        content = conn.read().decode("utf-8")[1:-2]
-        result = json.loads(content)
-    with urllib.request.urlopen("https://live.bilibili.com/%s" % room_id, timeout=5) as conn:
+            raise ValueError("Error while requesting room ID:%s" % result['msg'])
+        room_id = result['data']['room_id']
+    with urllib.request.urlopen("https://api.live.bilibili.com/room/v1/Room/get_info?room_id=%s&from=room" % room_id, timeout=5) as conn:
         content = conn.read().decode("utf-8")
-        print(content)
-    return web.Response(text=str(result["data"]))
+        result = json.loads(content)
+        if result['msg'] != 'ok':
+            raise ValueError("Error while requesting room ID:%s" % result['msg'])
+        data1 = result['data']
+        
+    with urllib.request.urlopen("https://api.live.bilibili.com/live_user/v1/UserInfo/get_anchor_in_room?roomid=%s" % room_id, timeout=5) as conn:
+        content = conn.read().decode("utf-8")
+        result = json.loads(content)
+        if result['msg'] != 'success':
+            raise ValueError("Error while requesting room ID:%s" % result['msg'])
+        data2 = dict(data1)
+        data2.update(result['data'])
+    
+    user_info_cache[original_room_id] = json.dumps(data2)
+    return web.Response(text=user_info_cache[original_room_id])
 
 
 app = web.Application(middlewares=[IndexMiddleware()])

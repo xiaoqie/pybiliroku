@@ -32,6 +32,8 @@
 
     <!--Let browser know website is optimized for mobile-->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="no-referrer" />
+    <meta charset="UTF-8">    
 
     <script>
         function formatBytes(a, b) { 
@@ -58,26 +60,6 @@
     <!--Import jQuery before materialize.js-->
     <script type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.0/js/materialize.min.js"></script>
-
-    <script>
-        userInfos = {}
-        function getUserInfo(roomID, forceUpdate=false) {
-            if (roomID in userInfos && !forceUpdate) {
-                return userInfos[roomID]
-            }
-            $.get({
-                type: "get",
-                url: "https://live.bilibili.com/" + roomID,
-                headers: {'Access-Control-Allow-Origin': 'x-requested-with'},
-                dataType: 'http',
-                async: false,
-                success: function (data) {
-                    print(data)
-                }
-            });
-        }
-        getUserInfo(139)
-    </script>
 
     <nav class="light-blue lighten-1">
         <div class="container nav-wrapper">
@@ -229,7 +211,21 @@
             }
         })
     </script>
-
+    <script>
+        function getUserInfo(roomID) {
+            $.get({
+                type: "get",
+                url: `/get_user_info?room_id=${roomID}`,
+                dataType: 'json',
+                async: true,
+                success: function (data) {
+                    $("#room" + roomID + "_uname").html(data['info']['uname'])
+                    $("#room" + roomID + "_face").attr("src", data['info']['face'] + "@100w_100h.webp")
+                    userInfos[roomID] = data
+                }
+            });
+        }
+    </script>
     <script>
         var hist = [];
         for (var i = 0; i < 10; i++) {
@@ -314,8 +310,12 @@
                         <div class="collapsible-header">
                             <ul class="collection">
                                 <li class="collection-item avatar">
-                                    <img src="https://i0.hdslb.com/bfs/face/0.jpg" alt="" class="circle">
-                                    <span class="title"><b>哔哩哔哩</b></span>
+                                    <img src="https://static.hdslb.com/images/member/noface.gif" alt="" id="room${room_id}_face" class="circle">
+                                    <span class="title">
+                                        <b id="room${room_id}_uname">
+                                            哔哩哔哩 - ( ゜- ゜)つロ 乾杯~
+                                        </b>
+                                    </span>
                                     <p>
                                         <h>Room ID: ${room_id}</h>
                                         <span class="new badge right middle ${badge_color}" data-badge-caption="${badge}"></span>
@@ -347,7 +347,12 @@
                     html += `<li class='collection-item' id='room${room_id}'>${content}</li>`
                 }
             })
-            if (html != "") $("#tasks").html(html)
+            if (html != "") {
+                $("#tasks").html(html)
+                $.each(processes, function(i, room_id) {
+                    getUserInfo(room_id)
+                })
+            }
 
             hist.push({
                 "processes": processes,
