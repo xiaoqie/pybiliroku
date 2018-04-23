@@ -33,7 +33,7 @@
     <!--Let browser know website is optimized for mobile-->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="referrer" content="no-referrer" />
-    <meta charset="UTF-8">    
+    <meta charset="UTF-8" />    
 
     <script>
         function formatBytes(a, b) { 
@@ -221,7 +221,6 @@
                 success: function (data) {
                     $("#room" + roomID + "_uname").html(data['info']['uname'])
                     $("#room" + roomID + "_face").attr("src", data['info']['face'] + "@100w_100h.webp")
-                    userInfos[roomID] = data
                 }
             });
         }
@@ -308,18 +307,17 @@
                 badge_color = download_speed == 0 ? "orange" : "green"
                 content = `
                         <div class="collapsible-header">
+                            <span class="new badge right middle ${badge_color}" data-badge-caption="${badge}"></span>
                             <ul class="collection">
                                 <li class="collection-item avatar">
                                     <img src="https://static.hdslb.com/images/member/noface.gif" alt="" id="room${room_id}_face" class="circle">
                                     <span class="title">
-                                        <b id="room${room_id}_uname">
+                                        <b class="truncate" id="room${room_id}_uname">
                                             哔哩哔哩 - ( ゜- ゜)つロ 乾杯~
                                         </b>
                                     </span>
                                     <p>
-                                        <h>Room ID: ${room_id}</h>
-                                        <span class="new badge right middle ${badge_color}" data-badge-caption="${badge}"></span>
-                                        <br>
+                                        <h class="truncate">Room ID: ${room_id}</h>
                                         <h id='room${room_id}_total_download'>${total_downloaded_size}</h>
                                     </p>
                                 </li>
