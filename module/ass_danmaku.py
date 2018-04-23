@@ -74,6 +74,8 @@ def on_danmaku(json_obj):
     global file, onscreen, danmaku_count
     danmaku = Danmaku(json_obj)
     if danmaku.is_danmaku:
+        infos = {'user': danmaku.user, 'text': danmaku.text, 'relative_timestamp': danmaku.timestamp - start_timestamp}
+        print("ass module received danmaku: {user} sent {text} in relative time {relative_timestamp}".format(**infos))
         danmaku_count += 1
 
         text = danmaku.text

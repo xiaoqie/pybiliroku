@@ -6,6 +6,8 @@ import subprocess
 import os
 import time
 import urllib.parse
+import urllib.request
+import re
 
 
 def IndexMiddleware(index='index.html'):
@@ -83,8 +85,16 @@ port = 2004
 
 
 def report(room_id, downloaded_size, start_timestamp):
+    if room_id in status:
+        last_download_size = status[room_id]['downloaded_size']
+        last_time = status[room_id]['time']
+    else:
+        last_download_size = 0
+        last_time = 0
     status[room_id] = {'downloaded_size': downloaded_size,
-                       "time": time.time(), "start_timestamp": start_timestamp}
+                       "time": time.time(), 
+                       "start_timestamp": start_timestamp,
+                       "download_speed": 1 if int(downloaded_size) > int(last_download_size) else 0}
     return True
 
 
@@ -117,7 +127,7 @@ def get_config():
         json_file = "{}"
     json_obj = json.loads(json_file)
     if "savepath" not in json_obj:
-        json_obj['savepath'] = "streams/{room_id}/{start_time}-{title}"
+        json_obj['savepath'] = "streams/{original_room_id}/{start_time}-{title}"
     if "load_on_init" not in json_obj:
         json_obj['load_on_init'] = []
     return json_obj
@@ -125,7 +135,7 @@ def get_config():
 
 def save_config(json_obj):
     if "savepath" not in json_obj:
-        json_obj['savepath'] = "streams/{room_id}/{start_time}-{title}"
+        json_obj['savepath'] = "streams/{original_room_id}/{start_time}-{title}"
     if "load_on_init" not in json_obj:
         json_obj['load_on_init'] = []
     with open("config.json", "w") as config_file:
@@ -143,6 +153,9 @@ async def do_report(request):
 
 
 async def do_status(request):
+    for room_id, value in status.items():
+        if time.time() - value['time'] > 1:
+            value['download_speed'] = 0
     return web.Response(text=json.dumps(status))
 
 
@@ -182,6 +195,24 @@ async def do_save_config(request):
     return web.Response(text="success")
 
 
+async def do_get_user_info(request):
+    room_id = request.query["room_id"]
+    with urllib.request.urlopen("https://api.live.bilibili.com/room/v1/Room/room_init?id=%s" % room_id, timeout=5) as conn:
+        content = conn.read().decode("utf-8")
+        result = json.loads(content)
+        if result['msg'] != 'ok':
+            raise ValueError(
+                "Error while requesting room ID:%s" % result['msg'])
+        _, uid = (result['data']['room_id'], result['data']['uid'])
+    with urllib.request.urlopen("http://live.bilibili.com/bili/isliving/%d" % uid, timeout=5) as conn:
+        content = conn.read().decode("utf-8")[1:-2]
+        result = json.loads(content)
+    with urllib.request.urlopen("https://live.bilibili.com/%s" % room_id, timeout=5) as conn:
+        content = conn.read().decode("utf-8")
+        print(content)
+    return web.Response(text=str(result["data"]))
+
+
 app = web.Application(middlewares=[IndexMiddleware()])
 app.router.add_get('/report', do_report)
 app.router.add_get("/status", do_status)
@@ -190,6 +221,7 @@ app.router.add_get("/close", do_close)
 app.router.add_get("/processes", do_processes)
 app.router.add_get("/get_config", do_get_config)
 app.router.add_get("/save_config", do_save_config)
+app.router.add_get("/get_user_info", do_get_user_info)
 app.router.add_static('/', path='.')
 
 load_on_init = get_config()["load_on_init"]

@@ -35,7 +35,7 @@ def on_danmaku(json_obj):
     danmaku = Danmaku(json_obj)
     if danmaku.is_danmaku:
         infos = {'user': danmaku.user, 'text': danmaku.text, 'relative_timestamp': danmaku.timestamp - start_timestamp}
-        print("received danmaku: {user} sent {text} in relative time {relative_timestamp}".format(**infos))
+        print("json module received danmaku: {user} sent {text} in relative time {relative_timestamp}".format(**infos))
         if ndanmaku != 0:
             file.write(", \n")
         file.write(json.dumps(infos))

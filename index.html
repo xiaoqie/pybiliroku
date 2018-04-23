@@ -28,37 +28,71 @@
         }
     </style>
     <!--Import materialize.css-->
-    <link type="text/css" rel="stylesheet" href="css/materialize.min.css" media="screen,projection" />
+    <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.0/css/materialize.min.css" media="screen,projection" />
 
     <!--Let browser know website is optimized for mobile-->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <script>
-        function formatBytes(a, b) { if (0 == a) return "0 Bytes"; var c = 1024, d = b || 2, e = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"], f = Math.floor(Math.log(a) / Math.log(c)); return parseFloat((a / Math.pow(c, f)).toFixed(d)).toFixed(4) + " " + e[f] }
+        function formatBytes(a, b) { 
+            if (0 == a) return "0 Bytes"; 
+            var c = 1024, d = b || 2, e = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"], f = Math.floor(Math.log(a) / Math.log(c)); 
+            return parseFloat((a / Math.pow(c, f)).toFixed(d)).toFixed(4) + " " + e[f] 
+        }
+        
+        function toHHMMSS(sec_num) {
+            var hours   = Math.floor(sec_num / 3600);
+            var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+            var seconds = sec_num - (hours * 3600) - (minutes * 60);
+
+            if (hours   < 10) {hours   = "0"+hours;}
+            if (minutes < 10) {minutes = "0"+minutes;}
+            if (seconds < 10) {seconds = "0"+seconds;}
+            return hours+':'+minutes+':'+seconds;
+        }
+
     </script>
 </head>
 
 <body>
     <!--Import jQuery before materialize.js-->
     <script type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
-    <script type="text/javascript" src="js/materialize.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.0/js/materialize.min.js"></script>
+
+    <script>
+        userInfos = {}
+        function getUserInfo(roomID, forceUpdate=false) {
+            if (roomID in userInfos && !forceUpdate) {
+                return userInfos[roomID]
+            }
+            $.get({
+                type: "get",
+                url: "https://live.bilibili.com/" + roomID,
+                headers: {'Access-Control-Allow-Origin': 'x-requested-with'},
+                dataType: 'http',
+                async: false,
+                success: function (data) {
+                    print(data)
+                }
+            });
+        }
+        getUserInfo(139)
+    </script>
 
     <nav class="light-blue lighten-1">
-        <div class="nav-wrapper">
-            <a href="#" class="brand-logo">Logo</a>
-            <a href="#" data-activates="mobile-demo" class="button-collapse">
-                <i class="material-icons">menu</i>
-            </a>
+        <div class="container nav-wrapper">
+            <ul class="left">
+                <li>
+                    <a href='#'>
+                        <i class='material-icons'>phonelink_setup</i>
+                    </a>
+                </li>
+            </ul>
             <ul class="right">
                 <li>
                     <a href='#settings_modal' class="modal-trigger" onclick="load_config()">
                         <i class='material-icons'>settings</i>
                     </a>
-                </li>
-            </ul>
-            <ul class="side-nav" id="mobile-demo">
-                <li>
-                    <a href="#">Nothing here</a>
                 </li>
             </ul>
         </div>
@@ -70,8 +104,8 @@
                 <h1 class="header center-on-small-only">Overview</h1>
                 <div class="row">
                     <div class="input-field col">
-                        <input placeholder="New task" id="room_id" type="number" class="validate" min=0>
-                        <label for="room_id">Room ID: </label>
+                        <input placeholder="Room ID" id="room_id" type="number" class="validate" min=0>
+                        <label for="room_id">Start recording: </label>
                     </div>
                     <a class="btn-floating btn-large waves-effect waves-light red modal-trigger" id="open_room" href="#open_room_modal">
                         <i class="material-icons">add</i>
@@ -79,7 +113,7 @@
                 </div>
             </div>
         </div>
-        <ul id="tasks" class="collection">
+        <ul id="tasks" class="collapsible popout">
         </ul>
     </div>
 
@@ -87,7 +121,7 @@
     <div id="open_room_modal" class="modal">
         <div class="modal-content">
             <h4 id="open_room_confirm_title">Confirmation</h4>
-            <p id="open_room_confirm_content">Do you want to start task "room"?</p>
+            <p id="open_room_confirm_content">Start recording "room"?</p>
         </div>
         <div id="open_room_modal_buttons" class="modal-footer">
             <a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat'>Yes</a>
@@ -105,16 +139,16 @@
             </div>
             <div class="input-field col s11">
                 <input id="open_on_init" type="text" class="validate" placeholder="Empty">
-                <label for="open_on_init">Tasks start during initialization: </label>
+                <label for="open_on_init">Automatically starts recording on startup: </label>
             </div>
             <!-- <div class="input-field col s12">
                 <select multiple id="open_on_init_multiple_selection">
-                    <option value="" disabled selected>Tasks start during initialization: </option>
+                    <option value="" disabled selected>Automatically starts recording: </option>
                     <option value="1">Placeholder 1</option>
                     <option value="2" selected>Placeholder 2</option>
                     <option value="3" selected>Placeholder 3</option>
                 </select>
-                <label>Tasks start during initialization:</label>
+                <label>Automatically starts recording:</label>
             </div> -->
         </div>
         <div id="open_room_modal_buttons" class="modal-footer">
@@ -124,7 +158,6 @@
     </div>
 
     <script>
-        $(".button-collapse").sideNav();
         $(document).ready(function () {
             $('select').material_select();
         });
@@ -143,7 +176,7 @@
         }
         function confirmCloseRoom(room_id) {
             $("#open_room_confirm_title").html("Confirmation")
-            $("#open_room_confirm_content").html("Do you want to close task " + room_id + "?")
+            $("#open_room_confirm_content").html("Stop recording " + room_id + "?")
             $("#open_room_modal_buttons").html("<a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat' onclick='closeRoom(" + room_id + ")'>Yes</a> \
                     <a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat'>No</a>")
             $('#open_room_modal').modal('open');
@@ -186,7 +219,7 @@
             var room_id = $("#room_id").val()
             if (room_id) {
                 $("#open_room_confirm_title").html("Confirmation")
-                $("#open_room_confirm_content").html("Do you want to start task " + room_id + "?")
+                $("#open_room_confirm_content").html("Start recording " + room_id + "?")
                 $("#open_room_modal_buttons").html("<a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat' onclick='openRoom(" + room_id + ")'>Yes</a> \
                         <a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat'>No</a>")
             } else {
@@ -195,7 +228,19 @@
                 $("#open_room_modal_buttons").html("<a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat'>Okay</a>")
             }
         })
-        var lastSortedAll = {}
+    </script>
+
+    <script>
+        var hist = [];
+        for (var i = 0; i < 10; i++) {
+            hist.push({
+                "processes": [],
+                "status": {},
+                "time": Date.now(),
+                "running": [],
+                "waiting": []
+            })
+        }
         function update() {
             var processes = []
             var status = {}
@@ -216,8 +261,10 @@
                 success: function (data) {
                     $.each(data, function (key, val) {
                         status[key] = {
+                            "start_time": val["start_timestamp"],
                             "time": val["time"],
-                            "downloaded_size": val["downloaded_size"]
+                            "downloaded_size": val["downloaded_size"],
+                            "download_speed": val["download_speed"]
                         }
                     });
                 }
@@ -228,48 +275,91 @@
                 if (room_id in status) {
                 } else {
                     status[room_id] = {
+                        "start_time": 0,
                         "time": 0,
-                        "downloaded_size": 0
+                        "downloaded_size": 0,
+                        "download_speed": 0
                     }
                 }
             })
 
             running = []
             waiting = []
-            archiving = []
             $.each(status, function (room_id, info) {
-                if (processes.indexOf(room_id) > -1 & room_id in running_status) {
-                    running[running.length] = room_id
-                } else if (processes.indexOf(room_id) > -1) {
+                if (status[room_id]["download_speed"] == 0) {
                     waiting[waiting.length] = room_id
-                } else if (room_id in status) {
-                    archiving[archiving.length] = room_id
+                } else {
+                    running[running.length] = room_id
                 }
             })
 
-            sortedAll = running.concat(waiting).concat(archiving)
-            $.each(sortedAll, function (i, room_id) {
+            listHasNotChanged = (JSON.stringify(hist[hist.length - 1]["processes"]) == JSON.stringify(processes) && 
+                                 JSON.stringify(hist[hist.length - 1]["running"]) == JSON.stringify(running) &&
+                                 JSON.stringify(hist[hist.length - 1]["waiting"]) == JSON.stringify(waiting))
+            $.each(running.concat(waiting), function (i, room_id) {
                 info = status[room_id]
+                total_downloaded_size = formatBytes(info["downloaded_size"], 4)
+                download_speed = info["download_speed"]
+                download_speed_string = "0 Bytes/s"
+                duration = toHHMMSS(Math.floor((info["time"]) - parseFloat(info["start_time"])))
+                if (room_id in hist[hist.length - 1]["status"]) {
+                    download_speed_float = (parseInt(info["downloaded_size"]) - parseInt(hist[hist.length - 1]["status"][room_id]["downloaded_size"])) / (Date.now() - hist[hist.length - 1]["time"])
+                    download_speed_string = formatBytes(download_speed_float, 4) + "/s"
+                } else {
+                    download_speed_string = "- Bytes/s"
+                }
+                badge = download_speed == 0 ? "pending" : "recording"
+                badge_color = download_speed == 0 ? "orange" : "green"
                 content = `
-                        <div>
-                            <span>${room_id}</span>
-                            <div class='secondary-content'>
-                                <span>${formatBytes(info["downloaded_size"], 4)}</span>
-                                ${processes.indexOf(room_id) > -1 ? `<a href='#!' class='secondary-content' onclick='confirmCloseRoom(${room_id})'><i class='material-icons'>close</i></a>` : ""}
+                        <div class="collapsible-header">
+                            <ul class="collection">
+                                <li class="collection-item avatar">
+                                    <img src="https://i0.hdslb.com/bfs/face/0.jpg" alt="" class="circle">
+                                    <span class="title"><b>哔哩哔哩</b></span>
+                                    <p>
+                                        <h>Room ID: ${room_id}</h>
+                                        <span class="new badge right middle ${badge_color}" data-badge-caption="${badge}"></span>
+                                        <br>
+                                        <h id='room${room_id}_total_download'>${total_downloaded_size}</h>
+                                    </p>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="collapsible-body">
+                            <div class="row">
+                                <div class="col s12">
+                                    Download Speed: <h id='room${room_id}_download_speed'>${download_speed_string}</h>
+                                    <br>
+                                    Duration: <h id='room${room_id}_duration'>${duration}</h>
+                                </div>
+                                <div class="col s12">
+                                ${processes.indexOf(room_id) > -1 ? `<a href='#!' class='waves-effect waves-light btn right red' onclick='confirmCloseRoom(${room_id})'><i class='material-icons left'>close</i>STOP</a>` : ""}
+                                </div>
                             </div>
-                        </div>`
-                if (JSON.stringify(lastSortedAll) == JSON.stringify(sortedAll)) { // no new tasks
-                    $("#room" + room_id).html(content)
+                        </div>
+                        `
+                if (listHasNotChanged) { // no new tasks
+                    // $("#room" + room_id).html(content)
+                    $("#room" + room_id + "_total_download").html(total_downloaded_size)
+                    $("#room" + room_id + "_download_speed").html(download_speed_string)
+                    $("#room" + room_id + "_duration").html(duration)
                 } else {
                     html += `<li class='collection-item' id='room${room_id}'>${content}</li>`
                 }
             })
             if (html != "") $("#tasks").html(html)
 
-            lastSortedAll = sortedAll
+            hist.push({
+                "processes": processes,
+                "status": status,
+                "time": Date.now(),
+                "running": running,
+                "waiting": waiting
+            })
+            hist.shift()
         }
         setInterval(update, 1000)
-        update()
+        update() // update manually once
     </script>
 
 </html>
