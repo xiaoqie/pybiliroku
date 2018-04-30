@@ -8,6 +8,7 @@ import time
 import urllib.parse
 import urllib.request
 import re
+import sys
 
 
 def IndexMiddleware(index='index.html'):
@@ -101,7 +102,7 @@ def report(room_id, downloaded_size, start_timestamp):
 def open_room(room_id):
     if room_id not in processes:
         processes[room_id] = subprocess.Popen([
-            "python", "roku_loop.py",
+            sys.executable, "roku_loop.py",
             "--room-id", str(room_id),
             "--savepath", get_config()['savepath'],
             "--port", str(port)
