@@ -28,12 +28,13 @@
         }
     </style>
     <!--Import materialize.css-->
-    <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.0/css/materialize.min.css" media="screen,projection" />
+    <link type="text/css" rel="stylesheet" href="css/materialize.min.css" media="screen,projection" />
 
     <!--Let browser know website is optimized for mobile-->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="referrer" content="no-referrer" />
     <meta charset="UTF-8" />    
+    <title>pybiliroku</title>
 
     <script>
         function formatBytes(a, b) { 
@@ -59,7 +60,7 @@
 <body>
     <!--Import jQuery before materialize.js-->
     <script type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.0/js/materialize.min.js"></script>
+    <script type="text/javascript" src="js/materialize.min.js"></script>
 
     <nav class="light-blue lighten-1">
         <div class="container nav-wrapper">
@@ -70,6 +71,7 @@
                     </a>
                 </li>
             </ul>
+            <ul class="center">pybiliroku</h1>
             <ul class="right">
                 <li>
                     <a href='#settings_modal' class="modal-trigger" onclick="load_config()">
@@ -81,19 +83,15 @@
     </nav>
 
     <div class="container">
+        <h1 class="header"> </h1>
         <div class="row">
-            <div class="col s12 m9">
-                <h1 class="header center-on-small-only">Overview</h1>
-                <div class="row">
-                    <div class="input-field col">
-                        <input placeholder="Room ID" id="room_id" type="number" class="validate" min=0>
-                        <label for="room_id">Start recording: </label>
-                    </div>
-                    <a class="btn-floating btn-large waves-effect waves-light red modal-trigger" id="open_room" href="#open_room_modal">
-                        <i class="material-icons">add</i>
-                    </a>
-                </div>
+            <div class="input-field col offset-s2">
+                <input placeholder="Room ID" id="room_id" type="number" class="validate" min=0>
+                <label for="room_id">Start recording: </label>
             </div>
+            <a class="btn-floating btn-large waves-effect waves-light red modal-trigger" id="open_room" href="#open_room_modal">
+                <i class="material-icons">add</i>
+            </a>
         </div>
         <ul id="tasks" class="collapsible popout">
         </ul>
