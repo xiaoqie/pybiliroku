@@ -14,6 +14,7 @@ total_size = 0
 start_timestamp = 0
 
 has_exception = False
+exception_time = 0
 
 
 def on_start(**kargs):
@@ -28,20 +29,22 @@ def on_start(**kargs):
 
 
 def on_chunk(chunk):
-    global total_size, has_exception
-    if has_exception:
+    global total_size, has_exception, exception_time
+    total_size += len(chunk)
+    if has_exception and time.time() - exception_time < 30:
         return
 
-    total_size += len(chunk)
+    conn = urllib.request.urlopen("http://127.0.0.1:2004/report?room_id=%d&downloaded_size=%d&start_timestamp=%d" % (room_id, total_size, start_timestamp))
     try:
-        with urllib.request.urlopen("http://127.0.0.1:2004/report?room_id=%d&downloaded_size=%d&start_timestamp=%d" % (room_id, total_size, start_timestamp)) as conn:
-            content = conn.read().decode("utf-8")
-            if content != "success":
-                has_exception = True
-                raise RuntimeError("Failed to log: returned %s" % content)
+        content = conn.read().decode("utf-8")
+        if content != "success":
+            raise RuntimeError("Failed to log: returned %s" % content)
     except Exception as e:
         has_exception = True
+        exception_time = time.time()
         raise RuntimeError("Failed to log: %s" % e)
+    finally:
+        conn.close()
 
 
 def on_end():
