@@ -1,7 +1,8 @@
 # pybiliroku
 
-
 这是一个使用 python 写的 B 站录播机。
+
+录播的逻辑部分参考了 [zyzsdy/biliroku](https://github.com/zyzsdy/biliroku)
 
 ## Requirements
 * python 3.6+
