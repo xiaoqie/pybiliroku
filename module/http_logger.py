@@ -33,8 +33,10 @@ def on_chunk(chunk):
     total_size += len(chunk)
     if has_exception and time.time() - exception_time < 30:
         return
+    if port is None:
+        return
 
-    conn = urllib.request.urlopen("http://127.0.0.1:2004/report?room_id=%d&downloaded_size=%d&start_timestamp=%d" % (room_id, total_size, start_timestamp))
+    conn = urllib.request.urlopen(f"http://127.0.0.1:{port}/report?room_id={room_id}&downloaded_size={total_size}&start_timestamp={start_timestamp}")
     try:
         content = conn.read().decode("utf-8")
         if content != "success":
