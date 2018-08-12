@@ -64,16 +64,16 @@ def is_living(uid):
 async def download_flv(flv_url):
     total_downloaded = 0
     # FIXME async is not working due to frequent timeout
-    response = urllib.request.urlopen(flv_url, timeout=5)
-    while True:
-        chunk = response.read(CHUNK_SIZE)
-        if not chunk:
-            raise RuntimeError("File ended, this ususally is not an error.")
+    with urllib.request.urlopen(flv_url, timeout=5) as response:
+        while True:
+            chunk = response.read(CHUNK_SIZE)
+            if not chunk:
+                raise RuntimeError("File ended, this ususally is not an error.")
 
-        modules.on_chunk(chunk)
-        total_downloaded += CHUNK_SIZE
+            modules.on_chunk(chunk)
+            total_downloaded += CHUNK_SIZE
 
-        await asyncio.sleep(0)
+            await asyncio.sleep(0)
 
 
 verbose("Starting.")
@@ -85,6 +85,8 @@ is_living_resp = is_living(uid)
 title = None
 if is_living_resp:
     title = is_living_resp['title']
+    title = title.replace('/', 'or')
+    title = title.replace(' ', '_')
     log("Title: %s" % title)
 else:
     verbose("UID:%s, Room ID:%s is not streaming, waiting for 30 seconds and closing." % (
