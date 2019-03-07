@@ -53,9 +53,9 @@ def get_flv_url(room_id):
         return random.choice(result["durl"])["url"]  # we don't know which url is valid, so random choose one
 
 
-def get_info(uid):
-    with urllib.request.urlopen("https://api.live.bilibili.com/room/v1/Room/get_info?room_id=%d&from=room" % uid, timeout=5) as conn:
-        content = conn.read().decode("utf-8")
+def is_living(uid):
+    with urllib.request.urlopen("http://live.bilibili.com/bili/isliving/%d" % uid, timeout=5) as conn:
+        content = conn.read().decode("utf-8")[1:-2]
         result = json.loads(content)
         verbose("isliving returns %s" % result)
         return result["data"]
@@ -81,9 +81,10 @@ verbose("Starting.")
 verbose("Got room ID: %s, UID: %s" % (room_id, uid))
 flv_url = get_flv_url(room_id)
 verbose("Got flv URL: %s" % flv_url)
-info = get_info(room_id)
-title = info['title']
-if info['live_status'] == 1:
+is_living_resp = is_living(uid)
+title = None
+if is_living_resp:
+    title = is_living_resp['title']
     title = title.replace('/', 'or')
     title = title.replace(' ', '_')
     log("Title: %s" % title)
@@ -126,4 +127,3 @@ finally:
     loop.close()
     modules.on_end()
     log("Closed.")
-    

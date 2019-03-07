@@ -180,6 +180,13 @@ async def do_processes(request):
     return web.Response(text=json.dumps(list(processes.keys())))
 
 
+async def do_info(request):
+    for room_id, value in status.items():
+        if time.time() - value['time'] > 1:
+            value['download_speed'] = 0
+    return web.Response(text=json.dumps({"time": time.time(), "processes": list(processes.keys()), "status": status}))
+
+
 async def do_get_config(request):
     return web.Response(text=json.dumps(get_config()))
 
@@ -233,6 +240,7 @@ app.router.add_get("/status", do_status)
 app.router.add_get("/open", do_open)
 app.router.add_get("/close", do_close)
 app.router.add_get("/processes", do_processes)
+app.router.add_get("/info", do_info)
 app.router.add_get("/get_config", do_get_config)
 app.router.add_get("/save_config", do_save_config)
 app.router.add_get("/get_user_info", do_get_user_info)
