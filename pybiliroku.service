@@ -1,0 +1,12 @@
+[Unit]
+Description=pybiliroku service
+After=network.target
+
+[Service]
+User=xiaoq
+Group=xiaoq
+ExecStart=/bin/bash -i /home/xiaoq/pybiliroku/pybiliroku.sh
+
+[Install]
+WantedBy=multi-user.target
+

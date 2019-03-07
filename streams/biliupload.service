@@ -1,0 +1,12 @@
+[Unit]
+Description=biliupload service
+After=network.target
+
+[Service]
+User=xiaoq
+Group=xiaoq
+ExecStart=/bin/bash -i /home/xiaoq/pybiliroku/streams/schedule.sh
+
+[Install]
+WantedBy=multi-user.target
+
