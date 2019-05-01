@@ -5,7 +5,9 @@ After=network.target
 [Service]
 User=xiaoq
 Group=xiaoq
-ExecStart=/bin/bash -i /home/xiaoq/pybiliroku/pybiliroku.sh
+ExecStart=/usr/bin/python3 /home/xiaoq/pybiliroku/manager.py
+Environment="PYTHONUNBUFFERED=TRUE"
+WorkingDirectory=/home/xiaoq/pybiliroku/
 
 [Install]
 WantedBy=multi-user.target

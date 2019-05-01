@@ -79,6 +79,7 @@ def upload(day):
     t0 = time.time()
     while True:
         if driver.find_element_by_css_selector('.upload-3-v2-success-hint-1').is_displayed():
+            os.system(f"rm -rf 297/{day}")
             return  # success
         if time.time() - t0 > 3600:
             raise Exception("timeout")

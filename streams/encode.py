@@ -26,7 +26,7 @@ ls = os.listdir("297")
 videos = []
 for file in ls:
     name, ext = os.path.splitext(file)
-    if ext == ".ass" and name + ".mp4" in ls:
+    if ext == ".ass" and name + ".mp4" in ls and os.path.getsize("297/" + name + ".mp4") > 50 * 1024*1024:
         videos.append(name)
 
 videos = sorted(videos)
@@ -60,9 +60,10 @@ for date_str, videos in date2videos.items():
         
         get_duration(f'{path}.mp4')  # for log purpose
 
-        scale = '1920:1080'
+        scale = '1280:720'
         bitrate = '2900k'
-        cmd = (f'{ffmpeg} -y -i "{path}.mp4" -vf "subtitles=temp.ass, scale={scale}" -c:v libx264 -preset veryfast -b:v {bitrate} -c:a aac -b:a 128k -f segment -segment_time 1800 -max_muxing_queue_size 2000 -reset_timestamps 1 -map 0 {output_dir}/T%d.mp4')
+        #cmd = (f'{ffmpeg} -y -i "{path}.mp4" -vf "subtitles=temp.ass, scale={scale}" -c:v libx264 -preset veryfast -b:v {bitrate} -c:a aac -b:a 128k -f segment -segment_time 1800 -max_muxing_queue_size 2000 -reset_timestamps 1 -map 0 {output_dir}/T%d.mp4')
+        cmd = (f'{ffmpeg} -y -i "{path}.mp4" -vf "subtitles=temp.ass, scale={scale}" -c:v libx264 -preset veryfast -b:v {bitrate} -c:a aac -b:a 128k -r 30 {output_dir}/T0.mp4')
         print(cmd)
         os.system(cmd)
 
