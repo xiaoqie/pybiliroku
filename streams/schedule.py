@@ -29,7 +29,7 @@ def is_roku_free():
 
 def execute_and_check_output(cmd):
     print(f"Starting {' '.join(cmd)}")
-    output = subprocess.check_output(cmd, shell=True, universal_newlines=True)
+    output = subprocess.check_output(cmd, universal_newlines=True)
     return output
 
 def send_mail(title, content, attachment=""):
@@ -41,145 +41,69 @@ def send_mail(title, content, attachment=""):
     msg['To'] = to
     msg['Date'] = formatdate(localtime=True)
     msg['Subject'] = title
-    msg.attach(MIMEText(content))
+    msg.add_header("Message-ID", "<biliupload@ponyfan.club>")
+    msg.add_header("In-Reply-To", "<biliupload@ponyfan.club>")
+    msg.add_header("References", "<biliupload@ponyfan.club>")
+    msg.attach(MIMEText(content, "html"))
 
-    part = MIMEApplication("stdout & stderr:\n" + attachment, Name="output.txt")
-    part['Content-Disposition'] = 'attachment; filename="output.txt"'
-    msg.attach(part)
+    if attachment:
+        part = MIMEApplication("stdout & stderr:\n" + attachment, Name="output.txt")
+        part['Content-Disposition'] = 'attachment; filename="output.txt"'
+        msg.attach(part)
 
     smtp = smtplib.SMTP('localhost')
     smtp.sendmail(fro, to, msg.as_string())
     smtp.close()
 
-def to_mp4():
+def run_task(script):
     t0 = time.time()
 
     datetime_before = execute_and_check_output(['date'])
-    disk_space_before = execute_and_check_output(['df', '-h'])
-    tree_output_before = execute_and_check_output(['tree', '.'])
-    encode_output = execute_and_check_output(sys.executable + " to_mp4.py 2>&1 | rtail --no-parse-date --no-tty --id to_mp4")
+    disk_space_before = execute_and_check_output(['df', '-h', '--type', 'ext4'])
+    tree_output_before = execute_and_check_output(['tree', "--noreport", "-h", '.'])
+    encode_output = execute_and_check_output([sys.executable, script])
     tree_output_after = execute_and_check_output(['tree', '.'])
     os.system('rm -rf trash')
-    disk_space_after = execute_and_check_output(['df', '-h'])
+    disk_space_after = execute_and_check_output(['df', '-h', '--type', 'ext4'])
     datetime_after = execute_and_check_output(['date'])
 
     task_duration = time.time() - t0
 
     email_content = f"""
-Conversion has completed.
-Task duration: {task_duration} seconds
----------------------------------------------
-Task started at {datetime_before}
-
-Disk space before the task started:
+<html>
+<body>
+<pre style="font: monospace">
+{script} has completed.
+start time: {datetime_before}
+end time:   {datetime_after}
+duration:   {task_duration} seconds
+---------------------------------------------------
+Disk space before:
 {disk_space_before}
-
+Disk space after:
+{disk_space_after}
+---------------------------------------------------
 Directory content before:
 {tree_output_before}
----------------------------------------------
-Task ended at {datetime_after}
-
-Disk space after the task ended:
-{disk_space_after}
-
-Directory content after this:
-{tree_output_after}
-
-    """
-
-    print(task_duration)
-    if task_duration > 20 or always_send_mail:
-        send_mail("conversion complete", email_content, encode_output)
-
-def encode():
-    t0 = time.time()
-
-    datetime_before = execute_and_check_output(['date'])
-    disk_space_before = execute_and_check_output(['df', '-h'])
-    tree_output_before = execute_and_check_output(['tree', '.'])
-    encode_output = execute_and_check_output(sys.executable + " encode.py 2>&1 | rtail --no-parse-date --no-tty --id encode")
-    tree_output_after = execute_and_check_output(['tree', '.'])
-    os.system('rm -rf trash')
-    disk_space_after = execute_and_check_output(['df', '-h'])
-    datetime_after = execute_and_check_output(['date'])
-
-    task_duration = time.time() - t0
-
-    email_content = f"""
-Encoding has completed.
-Task duration: {task_duration} seconds
----------------------------------------------
-Task started at {datetime_before}
-
-Disk space before the task started:
-{disk_space_before}
-
-Directory content before:
-{tree_output_before}
----------------------------------------------
-Task ended at {datetime_after}
-
-Directory content after this:
-{tree_output_after}
-
-Disk space after the task ended:
-{disk_space_after}
-
-    """
-
-    print(task_duration)
-    if task_duration > 20 or always_send_mail:
-        send_mail("encoding complete", email_content, encode_output)
-
-def upload():
-    t0 = time.time()
-
-    datetime_before = execute_and_check_output(['date'])
-    disk_space_before = execute_and_check_output(['df', '-h'])
-    tree_output_before = execute_and_check_output(['tree', '.'])
-    encode_output = execute_and_check_output(sys.executable + " upload.py 2>&1 | rtail --no-parse-date --no-tty --id upload")
-    tree_output_after = execute_and_check_output(['tree', '.'])
-    os.system('rm -rf trash')
-    disk_space_after = execute_and_check_output(['df', '-h'])
-    datetime_after = execute_and_check_output(['date'])
-
-    task_duration = time.time() - t0
-
-    email_content = f"""
-Uploading has completed.
-Task duration: {task_duration} seconds
----------------------------------------------
-Task started at {datetime_before}
-
-Disk space before the task started:
-{disk_space_before}
-
-Directory content before:
-{tree_output_before}
----------------------------------------------
-Task ended at {datetime_after}
-
-Disk space after the task ended:
-{disk_space_after}
-
 Directory content after:
 {tree_output_after}
-
+</pre>
+</body>
+</html>
     """
 
     print(task_duration)
-    if "!!!ERROR!!!" in encode_output:
-        raise Exception(encode_output)
     if task_duration > 20 or always_send_mail:
-        send_mail("upload complete", email_content, encode_output)
+        send_mail("Biliupload Notification", email_content, encode_output)
+
 
 while True:
     if is_roku_free():
         print("pybiliroku is free now, starting task")
         try:
-            to_mp4()
-            encode()
-            upload()
+            run_task("to_mp4.py")
+            run_task("encode.py")
+            run_task("upload.py")
         except Exception as e:
             send_mail('An error has occured', str(e) + '\nIf it happens repeatly, maybe cookies have expired.')
     else:
