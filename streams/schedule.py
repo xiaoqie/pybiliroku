@@ -41,7 +41,6 @@ def send_mail(title, content, attachment=""):
     msg['To'] = to
     msg['Date'] = formatdate(localtime=True)
     msg['Subject'] = title
-    msg.add_header("Message-ID", "<biliupload@ponyfan.club>")
     msg.add_header("In-Reply-To", "<biliupload@ponyfan.club>")
     msg.add_header("References", "<biliupload@ponyfan.club>")
     msg.attach(MIMEText(content, "html"))
@@ -71,6 +70,14 @@ def run_task(script):
 
     email_content = f"""
 <html>
+<head>
+    <link href="https://fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet">
+</head>
+<style>
+    pre {{
+        font-family: 'Inconsolata', monospace;
+    }}
+</style>
 <body>
 <pre style="font: monospace">
 {script} has completed.
