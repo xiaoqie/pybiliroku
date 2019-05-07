@@ -61,7 +61,7 @@ def run_task(script):
     disk_space_before = execute_and_check_output(['df', '-h', '--type', 'ext4'])
     tree_output_before = execute_and_check_output(['tree', "--noreport", "-h", '.'])
     encode_output = execute_and_check_output([sys.executable, script])
-    tree_output_after = execute_and_check_output(['tree', '.'])
+    tree_output_after = execute_and_check_output(['tree', "--noreport", "-h", '.'])
     os.system('rm -rf trash')
     disk_space_after = execute_and_check_output(['df', '-h', '--type', 'ext4'])
     datetime_after = execute_and_check_output(['date'])
@@ -71,15 +71,38 @@ def run_task(script):
     email_content = f"""
 <html>
 <head>
-    <link href="https://fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet">
+    <style type="text/css">
+        /* vietnamese */
+        @font-face {{
+            font-family: 'Inconsolata';
+            font-style: normal;
+            font-weight: 400;
+            src: local('Inconsolata Regular'), local('Inconsolata-Regular'), url(https://fonts.gstatic.com/s/inconsolata/v17/QldKNThLqRwH-OJ1UHjlKGlW5qhWxg.woff2) format('woff2');
+            unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+        }}
+        /* latin-ext */
+        @font-face {{
+            font-family: 'Inconsolata';
+            font-style: normal;
+            font-weight: 400;
+            src: local('Inconsolata Regular'), local('Inconsolata-Regular'), url(https://fonts.gstatic.com/s/inconsolata/v17/QldKNThLqRwH-OJ1UHjlKGlX5qhWxg.woff2) format('woff2');
+            unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+        }}
+        /* latin */
+        @font-face {{
+            font-family: 'Inconsolata';
+            font-style: normal;
+            font-weight: 400;
+            src: local('Inconsolata Regular'), local('Inconsolata-Regular'), url(https://fonts.gstatic.com/s/inconsolata/v17/QldKNThLqRwH-OJ1UHjlKGlZ5qg.woff2) format('woff2');
+            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+        }}
+        body {{
+            font-family: 'Inconsolata', monospace;
+        }}
+    </style>
 </head>
-<style>
-    pre {{
-        font-family: 'Inconsolata', monospace;
-    }}
-</style>
 <body>
-<pre style="font: monospace">
+<pre>
 {script} has completed.
 start time: {datetime_before}
 end time:   {datetime_after}
