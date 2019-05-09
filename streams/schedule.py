@@ -30,7 +30,7 @@ def is_roku_free():
 def execute_and_check_output(cmd):
     print(f"Starting {' '.join(cmd)}")
     output = subprocess.check_output(cmd, universal_newlines=True, stderr=subprocess.STDOUT)
-    return output.strip()
+    return str(output).strip()
 
 def send_mail(title, content, attachment=""):
     fro = 'xiaoq@ponyfan.club'
