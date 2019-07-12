@@ -47,6 +47,8 @@ def get_available_days():
 def get_uploaded_videos():
     driver.get("https://member.bilibili.com/v2#/upload-manager/article")
 
+    print(driver.current_url);
+    print(driver.title);
     if '创作中心' not in driver.title:
         driver.close()
         raise Exception('cookies may have expired')
@@ -61,7 +63,7 @@ def upload(day):
     files = '\n'.join([os.path.abspath(f'297/{day}/{file}') for file in sorted(os.listdir(f'297/{day}'), key=lambda s: int(s[1:-4])) if file.endswith('.mp4')])
     driver.get("https://member.bilibili.com/video/upload.html")
     # input_tag = driver.find_element_by_css_selector('.webuploader-element-invisible')
-    input_tag = driver.find_element_by_name('buploader')  
+    input_tag = driver.find_element_by_name('buploader')
     input_tag.send_keys(files)
 
     time.sleep(1)
@@ -81,7 +83,7 @@ def upload(day):
         if driver.find_element_by_css_selector('.upload-3-v2-success-hint-1').is_displayed():
             os.system(f"rm -rf 297/{day}")
             return  # success
-        if time.time() - t0 > 3600:
+        if time.time() - t0 > 7200:
             raise Exception("timeout")
 
         item_warps = driver.find_elements_by_css_selector('.file-list-v2-item-wrp')
@@ -104,6 +106,7 @@ try:
 
     chromeOptions = Options()
     chromeOptions.set_headless(True)
+    chromeOptions.add_experimental_option('w3c', False)
 
     driver = webdriver.Chrome(chrome_options=chromeOptions)
     driver.implicitly_wait(50)
@@ -111,6 +114,7 @@ try:
     with open('cookies.pickle', 'rb') as f:
         cookies = pickle.load(f)
     for cookie in cookies:
+        del cookie['expiry']
         driver.add_cookie(cookie)
 
     uploaded_titles = get_uploaded_videos()
