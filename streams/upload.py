@@ -60,7 +60,7 @@ def get_uploaded_videos():
 
 def upload(day):
     # driver.get("https://member.bilibili.com/v2#/upload/video/frame")
-    files = '\n'.join([os.path.abspath(f'297/{day}/{file}') for file in sorted(os.listdir(f'297/{day}'), key=lambda s: int(s[1:-4])) if file.endswith('.mp4')])
+    files = '\n'.join([os.path.abspath(f'297/{day}/{file}') for file in sorted(os.listdir(f'297/{day}'), key=lambda s: int(s.split("_")[0][1:])) if file.endswith('.mp4')])
     driver.get("https://member.bilibili.com/video/upload.html")
     # input_tag = driver.find_element_by_css_selector('.webuploader-element-invisible')
     input_tag = driver.find_element_by_name('buploader')

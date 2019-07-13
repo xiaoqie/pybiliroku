@@ -57,22 +57,22 @@ for date_str, videos in date2videos.items():
                 with open(f'temp.ass', 'w', encoding='utf-8') as out:
                     out.write(inp.read())
 
-        
+
         get_duration(f'{path}.mp4')  # for log purpose
 
         scale = '1280:720'
         bitrate = '2900k'
         #cmd = (f'{ffmpeg} -y -i "{path}.mp4" -vf "subtitles=temp.ass, scale={scale}" -c:v libx264 -preset veryfast -b:v {bitrate} -c:a aac -b:a 128k -f segment -segment_time 1800 -max_muxing_queue_size 2000 -reset_timestamps 1 -map 0 {output_dir}/T%d.mp4')
-        cmd = (f'{ffmpeg} -y -i "{path}.mp4" -vf "subtitles=temp.ass, scale={scale}" -c:v libx264 -preset veryfast -b:v {bitrate} -c:a aac -b:a 128k -r 30 {output_dir}/T0.mp4')
+        cmd = (f'{ffmpeg} -y -i "{path}.mp4" -vf "subtitles=temp.ass, scale={scale}" -c:v libx264 -preset veryfast -b:v {bitrate} -c:a aac -b:a 128k -r 30 "{output_dir}/T0.mp4"')
         print(cmd)
         os.system(cmd)
 
         for filename in sorted([f for f in os.listdir(output_dir) if f[0] == 'T' and f.endswith('.mp4')], key=lambda s: int(s[1:-4])):
             p += 1
-            os.rename(f'{output_dir}/{filename}', f'{output_dir}/P{p}.mp4')
+            os.rename(f'{output_dir}/{filename}', f'{output_dir}/P{p}_{video}.mp4')
 
         os.makedirs('trash', exist_ok=True)
         os.rename(path + ".mp4", "trash/" + video + ".mp4")
         os.system('rm -rf trash')
-        
+
         os.remove('temp.ass')
