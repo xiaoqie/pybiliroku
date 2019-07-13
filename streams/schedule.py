@@ -33,12 +33,11 @@ def execute_and_check_output(cmd):
     return str(output).strip()
 
 def send_mail(title, content, attachment=""):
-    fro = 'xiaoq@ponyfan.club'
-    to = 'xiaoqie108@gmail.com'
+    config = json.load(open("config.json"));
 
     msg = MIMEMultipart()
-    msg['From'] = fro
-    msg['To'] = to
+    msg['From'] = config['email_address']
+    msg['To'] = 'xiaoqie108@gmail.com'
     msg['Date'] = formatdate(localtime=True)
     msg['Subject'] = title
     msg.add_header("In-Reply-To", "<biliupload@ponyfan.club>")
@@ -50,8 +49,12 @@ def send_mail(title, content, attachment=""):
         part['Content-Disposition'] = 'attachment; filename="output.txt"'
         msg.attach(part)
 
-    smtp = smtplib.SMTP('localhost')
-    smtp.sendmail(fro, to, msg.as_string())
+    smtp = smtplib.SMTP(config['smtp_server'])
+    smtp.ehlo()
+    smtp.starttls()
+    smtp.ehlo()
+    smtp.login(msg['From'], config['email_password']);
+    smtp.sendmail(msg['From'], msg['To'], msg.as_string())
     smtp.close()
 
 def run_task(script):
