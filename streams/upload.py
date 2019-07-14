@@ -7,40 +7,18 @@ import time
 import traceback
 from collections import defaultdict
 
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+#from selenium import webdriver
+#from selenium.webdriver.chrome.options import Options
 
 from utils import *
 
 
 def get_title_of(day):
-    ls = os.listdir("297")
-    videos = []
-    for file in ls:
-        name, ext = os.path.splitext(file)
-        if ext == ".ass":
-            videos.append(name)
-
-    videos = sorted(videos)
-
-    date2videos = defaultdict(lambda: [])
-    date2users = defaultdict(lambda: [])
-    for video in videos:
-        datetime_string = '-'.join(video.split('-')[0:5])
-        datetime_obj = datetime.datetime.strptime(datetime_string, '%Y-%m-%d_%H-%M-%S')
-        date_str = str(datetime_obj - datetime.timedelta(hours=8)).split(' ')[0]
-        title = video[len('0000-00-00_00-00-00-'):]
-        closing_bracket = title.find('】')
-        if closing_bracket != -1:
-            user = title[1:closing_bracket]
-            date2users[date_str] += [user]
-            title = title[closing_bracket + 1:]
-        else:
-            date2users[date_str] = ['lolo']
-        date2videos[date_str] += [title]
-
-    return ('+'.join(list(set(date2videos[day]))), ','.join(list(set(date2users[day]))))
-
+    videos = get_videos()
+    date = datetime.datetime.strptime(day, '%Y-%m-%d').date()
+    video_list = videos[date]
+    return (' + '.join(list(dict.fromkeys([v.title for v in video_list]))),
+            ''.join(list(dict.fromkeys([v.streamer for v in video_list]))))
 
 def get_available_days():
     return [file for file in os.listdir('297') if os.path.isdir(f'297/{file}')]
