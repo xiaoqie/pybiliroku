@@ -10,6 +10,8 @@ from collections import defaultdict
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+from utils import *
+
 
 def get_title_of(day):
     ls = os.listdir("297")
@@ -59,10 +61,8 @@ def get_uploaded_videos():
 
 
 def upload(day):
-    # driver.get("https://member.bilibili.com/v2#/upload/video/frame")
     files = '\n'.join([os.path.abspath(f'297/{day}/{file}') for file in sorted(os.listdir(f'297/{day}'), key=lambda s: int(s.split("_")[0][1:])) if file.endswith('.mp4')])
     driver.get("https://member.bilibili.com/video/upload.html")
-    # input_tag = driver.find_element_by_css_selector('.webuploader-element-invisible')
     input_tag = driver.find_element_by_name('buploader')
     input_tag.send_keys(files)
 
@@ -81,18 +81,14 @@ def upload(day):
     t0 = time.time()
     while True:
         if driver.find_element_by_css_selector('.upload-3-v2-success-hint-1').is_displayed():
-            os.system(f"rm -rf 297/{day}")
             return  # success
+
         if time.time() - t0 > 7200:
             raise Exception("timeout")
 
         item_warps = driver.find_elements_by_css_selector('.file-list-v2-item-wrp')
         for item_warp in item_warps:
             title = item_warp.find_elements_by_css_selector('.item-title')
-            # intro = item_warp.find_elements_by_css_selector('.upload-status-intro')
-            # speed = item_warp.find_elements_by_css_selector('.upload-speed')
-            # remain_time = item_warp.find_elements_by_css_selector('.remain-time')
-            # print(' '.join([elem.get_attribute('innerHTML') for elem in title + intro]))
             print(title[0].get_attribute('innerHTML'), item_warp.find_elements_by_css_selector('.item-upload-info')[0].text)
         print("----------------------------------------")
 
@@ -118,7 +114,6 @@ try:
         driver.add_cookie(cookie)
 
     uploaded_titles = get_uploaded_videos()
-    #print(uploaded_titles)
     uploaded_days = [title[-len('2018-08-14'):] for title in uploaded_titles]
     uploaded_datetimes = [datetime.datetime.strptime(datetime_string, '%Y-%m-%d') for datetime_string in uploaded_days]
     last_uploaded_datetime = sorted(uploaded_datetimes)[-1]
@@ -129,18 +124,13 @@ try:
 
     for deletable_days in list(set(available_days) & set(uploaded_days)):
         os.makedirs('trash', exist_ok=True)
-        cmd = f'mv 297/{deletable_days}/ trash/'
-        print(cmd)
-        os.system(cmd)
+        os_system_ensure_success(f'mv 297/{deletable_days}/ trash/')
 
     if unuploaded_datetimes:
     # if True:
         upload_target = sorted(unuploaded_datetimes)[0].strftime('%Y-%m-%d')
         print('uploading', upload_target)
         upload(upload_target)
-except Exception as e:
-    print("!!!ERROR!!!")
-    traceback.print_exc(file=sys.stdout)
 finally:
     if driver:
         driver.quit()

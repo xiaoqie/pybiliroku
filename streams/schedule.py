@@ -33,7 +33,7 @@ def execute_and_check_output(cmd):
     return str(output).strip()
 
 def send_mail(title, content, attachment=""):
-    config = json.load(open("config.json"));
+    config = json.load(open("config.json"))
 
     msg = MIMEMultipart()
     msg['From'] = config['email_address']
@@ -65,7 +65,6 @@ def run_task(script):
     tree_output_before = execute_and_check_output(['tree', "--noreport", "-h", '.'])
     encode_output = execute_and_check_output([sys.executable, script])
     tree_output_after = execute_and_check_output(['tree', "--noreport", "-h", '.'])
-    os.system('rm -rf trash')
     disk_space_after = execute_and_check_output(['df', '-h', '--type', 'ext4'])
     datetime_after = execute_and_check_output(['date'])
 
