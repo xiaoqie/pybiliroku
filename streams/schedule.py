@@ -45,7 +45,7 @@ def send_mail(title, content, attachment=""):
     msg.attach(MIMEText(content, "html"))
 
     if attachment:
-        part = MIMEApplication("stdout & stderr:\n" + attachment, Name="output.txt")
+        part = MIMEText("stdout & stderr:\n" + attachment)
         part['Content-Disposition'] = 'attachment; filename="output.txt"'
         msg.attach(part)
 
@@ -62,9 +62,9 @@ def run_task(script):
 
     datetime_before = execute_and_check_output(['date'])
     disk_space_before = execute_and_check_output(['df', '-h', '--type', 'ext4'])
-    tree_output_before = execute_and_check_output(['tree', "--noreport", "-h", '.'])
+    tree_output_before = execute_and_check_output(['tree', '-N', "--noreport", "-h", '.'])
     encode_output = execute_and_check_output([sys.executable, script])
-    tree_output_after = execute_and_check_output(['tree', "--noreport", "-h", '.'])
+    tree_output_after = execute_and_check_output(['tree', '-N', "--noreport", "-h", '.'])
     disk_space_after = execute_and_check_output(['df', '-h', '--type', 'ext4'])
     datetime_after = execute_and_check_output(['date'])
 
