@@ -7,8 +7,8 @@ import time
 import traceback
 from collections import defaultdict
 
-#from selenium import webdriver
-#from selenium.webdriver.chrome.options import Options
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 from utils import *
 
