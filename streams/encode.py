@@ -14,6 +14,19 @@ else:
     NUL = 'NUL'
 
 
+def get_subtitle(video):
+    datetime_string = '-'.join(video.split('-')[0:5])
+    datetime_obj = datetime.datetime.strptime(datetime_string, '%Y-%m-%d_%H-%M-%S')
+    title = video[len('0000-00-00_00-00-00-'):]
+    closing_bracket = title.find('】')
+    if closing_bracket != -1:
+        user = title[1:closing_bracket]
+        title = title[closing_bracket + 1:]
+    else:
+        user = "lolo"
+    return title + "_" + datetime_obj.strftime("%H:%M:%S")
+
+
 def get_duration(path):
     # cmd = f'{ffprobe} -i "{path}" -show_entries format=duration -v quiet -of csv=p=0'.split(' ')
     cmd = [ffprobe, '-i', path, '-show_entries', 'format=duration', '-v', 'quiet', '-of', 'csv=p=0']
@@ -69,10 +82,10 @@ for date_str, videos in date2videos.items():
 
         for filename in sorted([f for f in os.listdir(output_dir) if f[0] == 'T' and f.endswith('.mp4')], key=lambda s: int(s[1:-4])):
             p += 1
-            os.rename(f'{output_dir}/{filename}', f'{output_dir}/P{p}_{video}.mp4')
+            os.rename(f'{output_dir}/{filename}', f'{output_dir}/P{p}_{get_subtitle(video)}.mp4')
 
         os.makedirs('trash', exist_ok=True)
         os.rename(path + ".mp4", "trash/" + video + ".mp4")
-        os.system('rm -rf trash')
+        #os.system('rm -rf trash')
 
         os.remove('temp.ass')

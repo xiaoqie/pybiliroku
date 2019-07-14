@@ -53,7 +53,7 @@ def send_mail(title, content, attachment=""):
     smtp.ehlo()
     smtp.starttls()
     smtp.ehlo()
-    smtp.login(msg['From'], config['email_password']);
+    smtp.login(msg['From'], config['email_password'])
     smtp.sendmail(msg['From'], msg['To'], msg.as_string())
     smtp.close()
 
