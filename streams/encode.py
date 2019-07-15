@@ -33,6 +33,6 @@ for date, video_list in videos.items():
         p += 1
         scale = '1280:720'
         bitrate = '2900k'
-        cmd = (f'{ffmpeg} -y -i "{video.path_without_ext}.mp4" -vf "subtitles=temp.ass, scale={scale}" -c:v libx264 -preset veryfast -b:v {bitrate} -c:a aac -b:a 128k -r 30 "{output_dir}/P{p}_{video.title}_{video.time.strftime("%H-%M-%S")}.mp4"')
+        cmd = (f'{ffmpeg} -analyzeduration 2147483647 -probesize 2147483647 -y -i "{video.path_without_ext}.mp4" -vf "subtitles=temp.ass, scale={scale}" -c:v libx264 -preset veryfast -b:v {bitrate} -c:a aac -b:a 128k -r 30 -max_muxing_queue_size 400 "{output_dir}/P{p}_{video.title}_{video.time.strftime("%H-%M-%S")}.mp4"')
         os_system_ensure_success(cmd)
         move_to_trash(f'{video.path_without_ext}.mp4')
