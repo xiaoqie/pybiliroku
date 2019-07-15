@@ -78,7 +78,7 @@ def get_videos() -> Dict[datetime.date, List[Video]]:
         return list(name_to_video.values())
 
     date_to_videos: Dict[datetime.date, List[Video]] = defaultdict(list)
-    for filename in os.listdir("297"):
+    for filename in sorted(os.listdir("297")):
         filepath = "297/" + filename
         if os.path.isdir(filepath):
             continue
