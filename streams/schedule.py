@@ -29,7 +29,10 @@ def is_roku_free():
 
 def execute_and_check_output(cmd):
     print(f"Starting {' '.join(cmd)}")
-    output = subprocess.check_output(cmd, universal_newlines=True, stderr=subprocess.STDOUT)
+    try:
+        output = subprocess.check_output(cmd, universal_newlines=True, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        raise Exception(f"{' '.join(cmd)} returned non-zero status, output:\n {e.output}")
     return str(output).strip()
 
 def send_mail(title, content, attachment=""):
@@ -137,7 +140,7 @@ while True:
             run_task("encode.py")
             run_task("upload.py")
         except Exception as e:
-            send_mail('An error has occured', str(e) + '\nIf it happens repeatly, maybe cookies have expired.')
+            send_mail('An error has occured', f"<pre>{str(e)}\nIf it happens repeatly, maybe cookies have expired.</pre>")
     else:
         print("pybiliroku is busy now")
     time.sleep(3600)

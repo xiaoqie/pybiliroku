@@ -101,8 +101,7 @@ try:
     unuploaded_datetimes = [dt for dt in available_datetimes if dt > last_uploaded_datetime]
 
     for deletable_days in list(set(available_days) & set(uploaded_days)):
-        os.makedirs('trash', exist_ok=True)
-        os_system_ensure_success(f'mv 297/{deletable_days}/ trash/')
+        move_to_trash(f"297/{deletable_days}")
 
     if unuploaded_datetimes:
     # if True:

@@ -3,6 +3,7 @@ import subprocess
 import datetime
 from typing import *
 from collections import defaultdict
+import shutil
 
 if os.name == 'posix':
     ffprobe = '/usr/bin/ffprobe'
@@ -91,7 +92,7 @@ def get_videos() -> Dict[datetime.date, List[Video]]:
 
 def move_to_trash(filepath):
     os.makedirs('trash', exist_ok=True)
-    os.rename(filepath, "trash/" + os.path.basename(filepath))
+    shutil.move(filepath, "trash/" + os.path.basename(filepath))
 
 def os_system_ensure_success(cmd):
     print(cmd)
