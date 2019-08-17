@@ -34,31 +34,29 @@ savepath = args.savepath
 start_time = datetime.datetime.now().strftime(args.time_format)
 
 
-def get_ids(room_id):
-    with urllib.request.urlopen("https://api.live.bilibili.com/room/v1/Room/room_init?id=%d" % room_id, timeout=5) as conn:
-        content = conn.read().decode("utf-8")
-        result = json.loads(content)
-        verbose("room_init returns %s" % result)
-        if result['msg'] != 'ok':
-            raise ValueError(
-                "Error while requesting room ID:%s" % result['msg'])
-        return (result['data']['room_id'], result['data']['uid'])
-
-
-def get_flv_url(room_id):
-    with urllib.request.urlopen("https://api.live.bilibili.com/api/playurl?cid=%d&otype=json&quality=0&platform=web" % room_id, timeout=5) as conn:
-        content = conn.read().decode("utf-8")
-        result = json.loads(content)
-        verbose("playurl returns %s" % result)
-        return random.choice(result["durl"])["url"]  # we don't know which url is valid, so random choose one
-
-
 def get_info(uid):
-    with urllib.request.urlopen("https://api.live.bilibili.com/room/v1/Room/get_info?room_id=%d&from=room" % uid, timeout=5) as conn:
-        content = conn.read().decode("utf-8")
-        result = json.loads(content)
-        verbose("isliving returns %s" % result)
-        return result["data"]
+    url = f"https://live.bilibili.com/{uid}"
+    req = urllib.request.Request(
+       url, 
+        data=None, 
+        headers={
+            'Host': 'live.bilibili.com',
+            'Connection': 'keep-alive',
+            'Pragma': 'no-cache',
+            'Cache-Control': 'no-cache',
+            'Upgrade-Insecure-Requests': 1,
+            'DNT': 1,
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'en,zh;q=0.9,ja;q=0.8,zh-CN;q=0.7,zh-TW;q=0.6'
+        }
+    )
+    with urllib.request.urlopen(req) as conn:
+        response = conn.read()
+        info_str = "{" + response.decode().split("__NEPTUNE_IS_MY_WAIFU__={", 1)[1].split("</script>", 1)[0]
+        info = json.loads(info_str)
+        # print(json.dumps(info, indent=4))
+        return info
 
 
 async def download_flv(flv_url):
@@ -77,17 +75,17 @@ async def download_flv(flv_url):
 
 
 verbose("Starting.")
-(room_id, uid) = get_ids(room_id)
-verbose("Got room ID: %s, UID: %s" % (room_id, uid))
-flv_url = get_flv_url(room_id)
-verbose("Got flv URL: %s" % flv_url)
 info = get_info(room_id)
-title = info['title']
-if info['live_status'] == 1:
-    title = title.replace('/', 'or')
-    title = title.replace(' ', '_')
-    log("Title: %s" % title)
-else:
+room_id = info['roomInitRes']['data']['room_id']
+short_id = info['roomInitRes']['data']['short_id']
+uid = info['roomInitRes']['data']['uid']
+is_living = info['baseInfoRes']['data']['live_status'] == 1
+flv_url = random.choice(info['playUrlRes']['data']["durl"])["url"] if "playUrlRes" in info else None
+current_qn = info['playUrlRes']['data']["current_qn"] if "playUrlRes" in info else None
+title = info['baseInfoRes']['data']['title'].replace('/', 'or').replace(' ', '_')
+log(f"roomID: {room_id}, title: {title}, qn: {current_qn}, flvURL: {flv_url}")
+
+if not is_living:
     verbose("UID:%s, Room ID:%s is not streaming, waiting for 30 seconds and closing." % (
         uid, original_room_id))
     # The sleep logic comes here, not in roku_loop.py
@@ -107,7 +105,7 @@ loop = asyncio.get_event_loop()
 
 tasks = []
 tasks += [asyncio.ensure_future(download_flv(flv_url))]
-tasks += danmaku.connect(room_id, loop, modules.on_danmaku)
+#tasks += danmaku.connect(room_id, loop, modules.on_danmaku)
 
 
 async def main(tasks, loop):
