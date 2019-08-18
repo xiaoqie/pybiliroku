@@ -53,7 +53,7 @@ def get_info(uid):
     )
     with urllib.request.urlopen(req) as conn:
         response = conn.read()
-        info_str = "{" + response.decode().split("__NEPTUNE_IS_MY_WAIFU__={", 1)[1].split("</script>", 1)[0]
+        info_str = "{" + response.decode("utf-8").split("__NEPTUNE_IS_MY_WAIFU__={", 1)[1].split("</script>", 1)[0]
         info = json.loads(info_str)
         # print(json.dumps(info, indent=4))
         return info
@@ -89,7 +89,7 @@ if not is_living:
     verbose("UID:%s, Room ID:%s is not streaming, waiting for 30 seconds and closing." % (
         uid, original_room_id))
     # The sleep logic comes here, not in roku_loop.py
-    # Because if it is streaming, this shouldn't wait to restart.
+    # Because if it is streaming, we shouldn't wait to restart.
     time.sleep(30)
     quit()
 
@@ -100,28 +100,19 @@ log("Savepath: %s" % savepath)
 modules.on_start(**globals())
 
 
-asyncio.new_event_loop()
-loop = asyncio.get_event_loop()
-
-tasks = []
-tasks += [asyncio.ensure_future(download_flv(flv_url))]
-#tasks += danmaku.connect(room_id, loop, modules.on_danmaku)
-
-
-async def main(tasks, loop):
+async def main():
     try:
-        await asyncio.gather(*tasks)
+        await asyncio.gather(
+            asyncio.create_task(download_flv(flv_url)),
+            asyncio.create_task(danmaku.connect(room_id, modules.on_danmaku)),
+        )
+        # only hardware malfunctions could achieve this line of code, i guess
+        error("while True: ended without exception, WHAAAAT?!")
     except Exception as e:
-        loop.stop()
         raise
-    # only hardware malfunctions could achieve this line of code, i guess
-    error("while True: ended without exception, WHAAAAT?!")
+    finally:
+        modules.on_end()
+        log("Closed.")
 
 
-try:
-    loop.run_until_complete(main(tasks, loop))
-finally:
-    loop.close()
-    modules.on_end()
-    log("Closed.")
-    
+asyncio.run(main())

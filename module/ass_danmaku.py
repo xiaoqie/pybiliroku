@@ -2,6 +2,7 @@
 import time
 import math
 import os
+import unicodedata
 
 class Danmaku:
     def __init__(self, json_obj):
@@ -70,6 +71,16 @@ Format: Layer, Start, End, Style, Actor, MarginL, MarginR, MarginV, Effect, Text
     file.flush()
 
 
+def char_len(text):
+    length = 0
+    for c in text:
+        if unicodedata.east_asian_width(c) in ['W', 'F', 'A']:
+            length += 1
+        else:
+            length += 0.5
+    return length
+
+
 def on_danmaku(json_obj):
     global file, onscreen, danmaku_count
     danmaku = Danmaku(json_obj)
@@ -84,11 +95,11 @@ def on_danmaku(json_obj):
                     for j in range(21)}  # remove old off screen text
         for j in range(21):  # 720/35 = 21 columns
             for text_on_screen in onscreen[j]:
-                if intersect(text_on_screen, (sec, len(text))):
+                if intersect(text_on_screen, (sec, char_len(text))):
                     break
             else:  # no intersection found
                 column = j
-                onscreen[j].append((sec, len(text)))
+                onscreen[j].append((sec, char_len(text)))
                 break
         else:
             print('cannot find a place for danmaku, ignored')

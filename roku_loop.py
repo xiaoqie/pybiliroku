@@ -8,5 +8,5 @@ import argparse
 
 while True:
     cmd = [sys.executable, "roku.py"] + sys.argv[1:]
+    print("$ %s" % ' '.join(cmd))
     subprocess.Popen(cmd).wait()
-    print("Restarting %s" % ' '.join(cmd))
