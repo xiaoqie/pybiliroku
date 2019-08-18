@@ -106,7 +106,7 @@ def on_danmaku(json_obj):
             return
 
         y = column * 35
-        end_x = -30 * len(text)
+        end_x = -30 * char_len(text)
         file.write('Dialogue: 0,')
         file.write(toasstime(sec))
         file.write(',')
