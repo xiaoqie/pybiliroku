@@ -51,7 +51,7 @@ def get_info(uid):
             'Accept-Language': 'en,zh;q=0.9,ja;q=0.8,zh-CN;q=0.7,zh-TW;q=0.6'
         }
     )
-    with urllib.request.urlopen(req) as conn:
+    with urllib.request.urlopen(req, timeout=5) as conn:
         response = conn.read()
         info_str = "{" + response.decode("utf-8").split("__NEPTUNE_IS_MY_WAIFU__={", 1)[1].split("</script>", 1)[0]
         info = json.loads(info_str)
