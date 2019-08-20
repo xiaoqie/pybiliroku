@@ -112,6 +112,7 @@ async def main():
     finally:
         modules.on_end()
         log.info("Closed.")
+        sys.exit()
 
 
 asyncio.run(main())
