@@ -244,7 +244,7 @@ app.router.add_get("/info", do_info)
 app.router.add_get("/get_config", do_get_config)
 app.router.add_get("/save_config", do_save_config)
 app.router.add_get("/get_user_info", do_get_user_info)
-app.router.add_static('/', path='.')
+app.router.add_static('/', path='static')
 
 load_on_init = get_config()["load_on_init"]
 print("Opening initialization tasks.")

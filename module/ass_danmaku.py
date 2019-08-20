@@ -41,6 +41,7 @@ def intersect(old, new):
         return True
 
 
+log = None
 start_timestamp = None
 file = None
 onscreen = {j: [] for j in range(21)}  # 720/35 = 21 columns
@@ -86,7 +87,7 @@ def on_danmaku(json_obj):
     danmaku = Danmaku(json_obj)
     if danmaku.is_danmaku:
         infos = {'user': danmaku.user, 'text': danmaku.text, 'relative_timestamp': danmaku.timestamp - start_timestamp}
-        print("ass module received danmaku: {user} sent {text} in relative time {relative_timestamp}".format(**infos))
+        log.info("{user} sent {text} in relative time {relative_timestamp}".format(**infos))
         danmaku_count += 1
 
         text = danmaku.text
@@ -102,7 +103,7 @@ def on_danmaku(json_obj):
                 onscreen[j].append((sec, char_len(text)))
                 break
         else:
-            print('cannot find a place for danmaku, ignored')
+            log.warning('cannot find a place for danmaku, ignored')
             return
 
         y = column * 35
@@ -124,4 +125,4 @@ def on_end():
 
     if danmaku_count == 0:
         os.remove(savepath)
-        print("removed empty %s" % savepath)
+        log.info("removed empty %s" % savepath)

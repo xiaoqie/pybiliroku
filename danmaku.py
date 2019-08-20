@@ -9,13 +9,19 @@ import traceback
 import time
 import websockets
 import zlib
-from _logging import log, verbose, error
+import argparse
+from logger import Logger
 
 
 ACTION_HEARTBEAT = 2
 ACTION_HEARTBEAT_REPLY = 3
 ACTION_MESSAGE = 5
 ACTION_CONNECT_SUCCESS = 8
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--room-id", action="store", dest="room_id", type=int, required=True)
+args, _ = parser.parse_known_args()
+log = Logger(f"{args.room_id} danmaku")
 
 
 def get_cmt_server(room_id):
@@ -41,11 +47,13 @@ def prepare_message(action, body="", packet_lenght=0, magic=16, ver=1, param=1):
     return buffer
 
 
-async def connect(room_id, on_danmaku):
+async def connect_once(room_id, on_danmaku):
     cmt_server = get_cmt_server(room_id)
     cmt_server_host = cmt_server['host']
     cmt_server_port = cmt_server['wss_port']
     uri = f"wss://{cmt_server_host}:{cmt_server_port}/sub"
+
+    log.info(f"connecting danmaku server: {uri}")
 
     async with websockets.connect(uri) as websocket:
         payload = json.dumps({"uid": 0, "roomid": room_id, "protover": 2})
@@ -53,6 +61,7 @@ async def connect(room_id, on_danmaku):
         
         async def heartbeat():
             while True:
+                log.info("sending heartbeat")
                 await websocket.send(prepare_message(2, "[object Object]"))
                 await asyncio.sleep(30)
         
@@ -70,15 +79,15 @@ async def connect(room_id, on_danmaku):
                         parse(zlib.decompress(data[16:length]))
                     else:
                         if op == 8:
-                            log("danmaku server connected")
+                            log.info("danmaku server connected")
                         elif op == 3:
-                            log("heartbeat received")
+                            log.info("heartbeat received")
                         elif op == 5:
                             json_data = json.loads(data[16:length].decode("utf-8"))
                             if json_data['cmd'] == "DANMU_MSG":
                                 on_danmaku(json_data)
                         else:
-                            log(f"unknown op:{op}")
+                            log.info(f"unknown op:{op}")
                     data = data[length:]
 
             while True:
@@ -89,3 +98,11 @@ async def connect(room_id, on_danmaku):
             asyncio.create_task(heartbeat()),
             asyncio.create_task(message())
         )
+
+
+async def connect(room_id, on_danmaku):
+    while True:
+        try:
+            await connect_once(room_id, on_danmaku)
+        except Exception as e:
+            log.error(f"danmaku server disconnected: {str(e)}")

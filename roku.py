@@ -13,25 +13,24 @@ import random
 
 import danmaku
 import modules
-from _logging import error, log, verbose
+from logger import Logger
 
 
 CHUNK_SIZE = 16 * 1024
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--room-id", action="store",
-                    dest="room_id", type=int, required=True)
-parser.add_argument("--savepath", action="store",
-                    dest="savepath", required=True)
-parser.add_argument("--time-format", action="store",
-                    dest="time_format", default='%Y-%m-%d_%H-%M-%S')
+parser.add_argument("--room-id", action="store", dest="room_id", type=int, required=True)
+parser.add_argument("--savepath", action="store", dest="savepath", required=True)
+parser.add_argument("--time-format", action="store", dest="time_format", default='%Y-%m-%d_%H-%M-%S')
 for name, params in modules.request_args.items():
     parser.add_argument(name, **params)
 args = parser.parse_args()
+
 original_room_id = room_id = args.room_id
 savepath = args.savepath
 start_time = datetime.datetime.now().strftime(args.time_format)
+log = Logger(f"{room_id} roku")
 
 
 def get_info(uid):
@@ -74,7 +73,7 @@ async def download_flv(flv_url):
             await asyncio.sleep(0)
 
 
-verbose("Starting.")
+log.verbose("Starting.")
 info = get_info(room_id)
 room_id = info['roomInitRes']['data']['room_id']
 short_id = info['roomInitRes']['data']['short_id']
@@ -83,10 +82,10 @@ is_living = info['baseInfoRes']['data']['live_status'] == 1
 flv_url = random.choice(info['playUrlRes']['data']["durl"])["url"] if "playUrlRes" in info else None
 current_qn = info['playUrlRes']['data']["current_qn"] if "playUrlRes" in info else None
 title = info['baseInfoRes']['data']['title'].replace('/', 'or').replace(' ', '_')
-log(f"roomID: {room_id}, title: {title}, qn: {current_qn}, flvURL: {flv_url}")
+log.info(f"roomID: {room_id}, title: {title}, qn: {current_qn}, flvURL: {flv_url}")
 
 if not is_living:
-    verbose("UID:%s, Room ID:%s is not streaming, waiting for 30 seconds and closing." % (
+    log.verbose("UID:%s, Room ID:%s is not streaming, waiting for 30 seconds and closing." % (
         uid, original_room_id))
     # The sleep logic comes here, not in roku_loop.py
     # Because if it is streaming, we shouldn't wait to restart.
@@ -96,7 +95,7 @@ if not is_living:
 start_timestamp = time.time()
 savepath = savepath.format(**globals())
 os.makedirs(os.path.dirname(savepath), exist_ok=True)
-log("Savepath: %s" % savepath)
+log.info("Savepath: %s" % savepath)
 modules.on_start(**globals())
 
 
@@ -107,12 +106,12 @@ async def main():
             asyncio.create_task(danmaku.connect(room_id, modules.on_danmaku)),
         )
         # only hardware malfunctions could achieve this line of code, i guess
-        error("while True: ended without exception, WHAAAAT?!")
+        log.error("while True: ended without exception, WHAAAAT?!")
     except Exception as e:
         raise
     finally:
         modules.on_end()
-        log("Closed.")
+        log.info("Closed.")
 
 
 asyncio.run(main())

@@ -2,6 +2,7 @@
 import time
 import os
 
+log = None
 file = None
 total_size = 0
 savepath = None
@@ -22,8 +23,8 @@ def on_end():
     global file, total_size
     file.close()
 
-    print("downloaded %d" % total_size)
+    log.info("downloaded %d" % total_size)
 
     if total_size == 0:
         os.remove(savepath)
-        print("removed empty %s" % savepath)
+        log.info("removed empty %s" % savepath)

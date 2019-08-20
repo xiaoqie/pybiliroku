@@ -5,6 +5,7 @@ import os
 
 enabled = False
 
+
 class Danmaku:
     def __init__(self, json_obj):
         self.is_danmaku = json_obj['cmd'] == "DANMU_MSG"
@@ -15,6 +16,7 @@ class Danmaku:
             self.timestamp = json_obj["info"][0][4]
 
 
+log = None
 start_timestamp = None
 file = None
 ndanmaku = 0
@@ -35,7 +37,7 @@ def on_danmaku(json_obj):
     danmaku = Danmaku(json_obj)
     if danmaku.is_danmaku:
         infos = {'user': danmaku.user, 'text': danmaku.text, 'relative_timestamp': danmaku.timestamp - start_timestamp}
-        print("json module received danmaku: {user} sent {text} in relative time {relative_timestamp}".format(**infos))
+        log.info("{user} sent {text} in relative time {relative_timestamp}".format(**infos))
         if ndanmaku != 0:
             file.write(", \n")
         file.write(json.dumps(infos))
@@ -51,4 +53,4 @@ def on_end():
 
     if ndanmaku == 0:
         os.remove(savepath)
-        print("removed empty %s" % savepath)
+        log.info("removed empty %s" % savepath)
