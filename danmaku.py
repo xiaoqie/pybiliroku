@@ -102,6 +102,8 @@ async def connect_once(room_id, on_danmaku):
 
 async def connect(room_id, on_danmaku):
     while True:
+        if asyncio.get_event_loop().is_closed():
+            return
         try:
             await connect_once(room_id, on_danmaku)
         except Exception as e:
