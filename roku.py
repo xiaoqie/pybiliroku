@@ -100,19 +100,18 @@ modules.on_start(**globals())
 
 
 async def main():
+    danmaku_task = asyncio.create_task(danmaku.connect(room_id, modules.on_danmaku))
     try:
-        await asyncio.gather(
-            asyncio.create_task(download_flv(flv_url)),
-            asyncio.create_task(danmaku.connect(room_id, modules.on_danmaku)),
-        )
+        await download_flv(flv_url)
+        danmaku_task.cancel()
         # only hardware malfunctions could achieve this line of code, i guess
-        log.error("while True: ended without exception, WHAAAAT?!")
+        log.error("while True ended without exception, WHAAAAT?!")
     except Exception as e:
         raise
     finally:
+        danmaku_task.cancel()
         modules.on_end()
         log.info("Closed.")
-        sys.exit()
 
 
 asyncio.run(main())

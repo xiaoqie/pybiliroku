@@ -94,17 +94,18 @@ async def connect_once(room_id, on_danmaku):
                 data = await websocket.recv()
                 parse(data)
 
-        await asyncio.gather(
-            asyncio.create_task(heartbeat()),
-            asyncio.create_task(message())
-        )
+        heartbeat_task = asyncio.create_task(heartbeat())
+        try:
+            await message()
+        finally:
+            heartbeat_task.cancel()
 
 
 async def connect(room_id, on_danmaku):
     while True:
-        if asyncio.get_event_loop().is_closed():
-            return
         try:
             await connect_once(room_id, on_danmaku)
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             log.error(f"danmaku server disconnected: {str(e)}")
