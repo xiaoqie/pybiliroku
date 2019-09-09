@@ -105,6 +105,7 @@ try:
 
     if unuploaded_datetimes:
     # if True:
+        pickle.dump(driver.get_cookies(), open("cookies.pickle","wb"))
         upload_target = sorted(unuploaded_datetimes)[0].strftime('%Y-%m-%d')
         print('uploading', upload_target)
         upload(upload_target)
