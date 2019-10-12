@@ -33,29 +33,23 @@ start_time = datetime.datetime.now().strftime(args.time_format)
 log = Logger(f"{room_id} roku")
 
 
-def get_info(uid):
-    url = f"https://live.bilibili.com/blanc/{uid}?liteVersion=true"
-    req = urllib.request.Request(
-       url, 
-        data=None, 
-        headers={
-            'Host': 'live.bilibili.com',
-            'Connection': 'keep-alive',
-            'Pragma': 'no-cache',
-            'Cache-Control': 'no-cache',
-            'Upgrade-Insecure-Requests': 1,
-            'DNT': 1,
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Language': 'en,zh;q=0.9,ja;q=0.8,zh-CN;q=0.7,zh-TW;q=0.6'
-        }
-    )
+def get_json_from(url):
+    req = urllib.request.Request(url)
     with urllib.request.urlopen(req, timeout=5) as conn:
         response = conn.read()
-        info_str = "{" + response.decode("utf-8").split("__NEPTUNE_IS_MY_WAIFU__={", 1)[1].split("</script>", 1)[0]
-        info = json.loads(info_str)
-        # print(json.dumps(info, indent=4))
+        text = response.decode("utf-8")
+        info = json.loads(text)
         return info
+
+
+def get_info(uid):
+    roomInitRes = get_json_from(f"https://api.live.bilibili.com/room/v1/Room/room_init?id={uid}")
+    if roomInitRes["msg"] != "ok":
+        raise RuntimeError("failed request room_init")
+    room_id = roomInitRes["data"]["room_id"]
+    playUrlRes = get_json_from(f"https://api.live.bilibili.com/room/v1/Room/playUrl?cid={room_id}&qn=0&platform=web")
+    baseInfoRes = get_json_from(f"https://api.live.bilibili.com/room/v1/Room/get_info?room_id={room_id}&from=room")
+    return {'roomInitRes': roomInitRes, 'playUrlRes': playUrlRes, 'baseInfoRes': baseInfoRes}
 
 
 async def download_flv(flv_url):
