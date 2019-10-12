@@ -34,7 +34,7 @@ log = Logger(f"{room_id} roku")
 
 
 def get_info(uid):
-    url = f"https://live.bilibili.com/{uid}"
+    url = f"https://live.bilibili.com/blanc/{uid}?liteVersion=true"
     req = urllib.request.Request(
        url, 
         data=None, 
