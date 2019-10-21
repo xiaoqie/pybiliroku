@@ -11,7 +11,7 @@ class Danmaku:
         if self.is_danmaku:
             self.text = json_obj["info"][1]
             self.user = json_obj["info"][2][1]
-            self.timestamp = json_obj["info"][0][4]
+            self.timestamp = int(json_obj["info"][0][4] / 1000)
 
 
 def toasstime(sec):
