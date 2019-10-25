@@ -39,10 +39,24 @@ def get_uploaded_videos():
 
 
 def upload(day):
-    files = '\n'.join([os.path.abspath(f'297/{day}/{file}') for file in sorted(os.listdir(f'297/{day}'), key=lambda s: int(s.split("_")[0][1:])) if file.endswith('.mp4')])
+    file_array = [os.path.abspath(f'297/{day}/{file}') for file in sorted(os.listdir(f'297/{day}'), key=lambda s: int(s.split("_")[0][1:])) if file.endswith('.mp4')]
     driver.get("https://member.bilibili.com/video/upload.html")
-    input_tag = driver.find_element_by_name('buploader')
-    input_tag.send_keys(files)
+    for filename in file_array:
+        input_tag = driver.find_element_by_name('buploader')
+        input_tag.send_keys(filename)
+        time.sleep(0.2)
+        
+    for pause in driver.find_elements_by_css_selector('.item-status-click'):
+        if pause.get_attribute('innerHTML') == '暂停':
+            pause.click()
+            print('paused')
+            time.sleep(0.2)
+
+    for cont in driver.find_elements_by_css_selector('.item-status-click'):
+        if cont.get_attribute('innerHTML') == '继续':
+            cont.click()
+            print("cont'd")
+            time.sleep(0.2)
 
     time.sleep(1)
     driver.find_element_by_css_selector('.template-op p').click()
@@ -79,7 +93,7 @@ try:
         sys.exit()
 
     chromeOptions = Options()
-    chromeOptions.set_headless(True)
+    #chromeOptions.set_headless(True)
     chromeOptions.add_experimental_option('w3c', False)
 
     driver = webdriver.Chrome(chrome_options=chromeOptions)
