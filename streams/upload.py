@@ -93,7 +93,7 @@ try:
         sys.exit()
 
     chromeOptions = Options()
-    #chromeOptions.set_headless(True)
+    chromeOptions.set_headless(True)
     chromeOptions.add_experimental_option('w3c', False)
 
     driver = webdriver.Chrome(chrome_options=chromeOptions)
