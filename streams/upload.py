@@ -39,14 +39,14 @@ def get_uploaded_videos():
 
 
 def upload(day):
-    file_array = [os.path.abspath(f'297/{day}/{file}') for file in sorted(os.listdir(f'297/{day}'), key=lambda s: int(s.split("_")[0][1:])) if file.endswith('.mp4')]
+    file_array = [os.path.abspath(f'297/{day}/{file}').replace("/mnt/c", "C:") for file in sorted(os.listdir(f'297/{day}'), key=lambda s: int(s.split("_")[0][1:])) if file.endswith('.mp4')]
     driver.get("https://member.bilibili.com/video/upload.html")
     for filename in file_array:
         input_tag = driver.find_element_by_name('buploader')
         input_tag.send_keys(filename)
         time.sleep(0.2)
         
-    for pause in driver.find_elements_by_css_selector('.item-status-click'):
+    """for pause in driver.find_elements_by_css_selector('.item-status-click'):
         if pause.get_attribute('innerHTML') == '暂停':
             pause.click()
             print('paused')
@@ -56,7 +56,7 @@ def upload(day):
         if cont.get_attribute('innerHTML') == '继续':
             cont.click()
             print("cont'd")
-            time.sleep(0.2)
+            time.sleep(0.2)"""
 
     time.sleep(1)
     driver.find_element_by_css_selector('.template-op p').click()
