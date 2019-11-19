@@ -32,7 +32,7 @@ for date, video_list in videos.items():
 
         p += 1
         scale = '1280:720'
-        bitrate = '2900k'
+        bitrate = '1500k'
         #scale = '852:480'
         #bitrate = '1200k'
         #scale = '1920:1080'

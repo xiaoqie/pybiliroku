@@ -58,7 +58,11 @@ async def download_flv(flv_url):
        flv_url, 
         data=None, 
         headers={
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36',
+'DNT': '1',
+'Origin': 'https://live.bilibili.com',
+'Referer': f'https://live.bilibili.com/blanc/{original_room_id}',
+'Sec-Fetch-Mode': 'cors',
+'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36',
         }
     )
     # FIXME async is not working due to frequent timeout
