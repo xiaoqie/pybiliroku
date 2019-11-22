@@ -4,6 +4,7 @@ import os
 import sys
 import pickle
 import time
+import re
 import traceback
 from collections import defaultdict
 
@@ -27,8 +28,8 @@ def get_available_days():
 def get_uploaded_videos():
     driver.get("https://member.bilibili.com/v2#/upload-manager/article")
 
-    print(driver.current_url);
-    print(driver.title);
+    print(driver.current_url)
+    print(driver.title)
     if '创作中心' not in driver.title:
         driver.close()
         raise Exception('cookies may have expired')
@@ -39,14 +40,12 @@ def get_uploaded_videos():
 
 
 def upload(day):
-    file_array = [os.path.abspath(f'297/{day}/{file}').replace("/mnt/c", "C:") for file in sorted(os.listdir(f'297/{day}'), key=lambda s: int(s.split("_")[0][1:])) if file.endswith('.mp4')]
-    uploading_index = 0
+    file_array = [
+        re.sub("^/mnt/(?P<drive>\w)/", "\g<drive>:/", os.path.abspath(f'297/{day}/{file}')) 
+        for file in sorted(os.listdir(f'297/{day}'), key=lambda s: int(s.split("_")[0][1:])) 
+        if file.endswith('.mp4')]
     driver.get("https://member.bilibili.com/video/upload.html")
-    
-    """input_tag = driver.find_element_by_name('buploader')
-    input_tag.send_keys(file_array[uploading_index])
-    uploading_index += 1
-    time.sleep(0.2)"""
+
     input_tag = driver.find_element_by_name('buploader')
     input_tag.send_keys('\n'.join(file_array))
 
@@ -62,48 +61,23 @@ def upload(day):
     time.sleep(0.2)
     driver.find_element_by_css_selector('.submit-btn-group-add').click()
 
+    block = BlockPrint()
     t0 = time.time()
     while True:
         if driver.find_element_by_css_selector('.upload-3-v2-success-hint-1').is_displayed():
             print("success")
             return  # success
 
-        if time.time() - t0 > 3600:
+        if time.time() - t0 > 36000:
             raise Exception("timeout")
 
+        block.clear()
         item_warps = driver.find_elements_by_css_selector('.file-list-v2-item-wrp')
-        all_success = True
         for item_warp in item_warps:
             title = item_warp.find_elements_by_css_selector('.item-title')
             title_string = title[0].get_attribute('innerHTML')
             upload_info = item_warp.find_elements_by_css_selector('.item-upload-info')[0].text
-            print(title_string, upload_info)
-            if "上传错误" in upload_info:
-                raise Exception('an error has occured')
-
-                #print(item_warp.get_attribute('innerHTML'))
-                #for retry in item_warp.find_elements_by_css_selector('.item-status-click'):
-                #    if retry.get_attribute('innerHTML') == '重试':
-                #        retry.click()
-                #        print("retryed")
-                all_success = False
-            if "上传完成" not in upload_info:
-                all_success = False
-
-        """if all_success:
-            time.sleep(10)
-            input_tag = driver.find_element_by_name('buploader')
-
-            if uploading_index < len(file_array):
-                input_tag.send_keys(file_array[uploading_index])
-
-            uploading_index += 1
-            time.sleep(1)
-            if uploading_index == len(file_array):
-                driver.find_element_by_css_selector('.submit-btn-group-add').click()"""
-        
-
-        print("----------------------------------------")
+            block.print(title_string, upload_info)
 
         time.sleep(1)
         
