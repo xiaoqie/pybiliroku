@@ -1,6 +1,7 @@
 import os
 import subprocess
 import datetime
+import sys
 from typing import *
 from collections import defaultdict
 import shutil
@@ -13,6 +14,23 @@ else:
     ffprobe = 'ffprobe'
     ffmpeg = 'ffmpeg'
     NUL = 'NUL'
+
+
+class BlockPrint:
+    def __init__(self):
+        self.total_line = 0
+    
+    def print(self, *args):
+        print(*args)
+        self.total_line += 1
+    
+    def clear(self):
+        for i in range(self.total_line):
+            sys.stdout.write("\033[F")
+            sys.stdout.write("\033[K")
+            sys.stdout.flush()
+        self.total_line = 0
+
 
 class Video:
     video_name: str
