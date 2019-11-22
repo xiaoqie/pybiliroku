@@ -136,9 +136,9 @@ while True:
     if is_roku_free():
         print("pybiliroku is free now, starting task")
         try:
-            run_task("to_mp4.py")
+            #run_task("to_mp4.py")
             run_task("encode.py")
-            run_task("upload.py")
+            #run_task("upload.py")
             os.system("rm -rf trash")
         except Exception as e:
             send_mail('An error has occured', f"<pre>{str(e)}\nIf it happens repeatly, maybe cookies have expired.</pre>")
