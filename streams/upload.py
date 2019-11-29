@@ -68,7 +68,7 @@ def upload(day):
             print("success")
             return  # success
 
-        if time.time() - t0 > 36000:
+        if time.time() - t0 > 3600 * 100:
             raise Exception("timeout")
 
         block.clear()
@@ -78,6 +78,8 @@ def upload(day):
             title_string = title[0].get_attribute('innerHTML')
             upload_info = item_warp.find_elements_by_css_selector('.item-upload-info')[0].text
             block.print(title_string, upload_info)
+            if "上传错误" in upload_info:
+                raise Exception('an error has occured')
 
         time.sleep(1)
         
