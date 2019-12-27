@@ -55,9 +55,9 @@ def upload(day):
     driver.find_element_by_css_selector('.template-list-small-item').click()
     time.sleep(0.2)
     (title, user) = get_title_of(day)
-    driver.find_element_by_css_selector('.input-box-v2-1-val').send_keys(f'【{user}直播录像】{title} {day}')
+    driver.find_element_by_css_selector('.input-box-v2-1-val').send_keys(f'【{day}】{title}')
     time.sleep(0.2)
-    driver.find_element_by_css_selector('.text-area-box-v2-val').send_keys('由lolo授权录播组录制并上传。')
+    driver.find_element_by_css_selector('.text-area-box-v2-val').send_keys('由于网络问题，录播暂时不能及时上传')
     time.sleep(0.2)
     driver.find_element_by_css_selector('.submit-btn-group-add').click()
 
@@ -103,7 +103,7 @@ try:
         driver.add_cookie(cookie)
 
     uploaded_titles = get_uploaded_videos()
-    uploaded_days = [title[-len('2018-08-14'):] for title in uploaded_titles]
+    uploaded_days = [title[1:len('2018-08-14') + 1] if title[1:len('2018-08-14') + 1].startswith("20") else title[-len('2018-08-14'):] for title in uploaded_titles]
     uploaded_datetimes = [datetime.datetime.strptime(datetime_string, '%Y-%m-%d') for datetime_string in uploaded_days]
     last_uploaded_datetime = sorted(uploaded_datetimes)[-1]
 

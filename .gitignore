@@ -100,3 +100,6 @@ ENV/
 
 # custom config
 *.json
+streams/trash
+streams/cookies.pickle
+streams/297
