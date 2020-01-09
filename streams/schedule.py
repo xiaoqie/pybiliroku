@@ -75,37 +75,6 @@ def run_task(script):
 
     email_content = f"""
 <html>
-<head>
-    <style type="text/css">
-        /* vietnamese */
-        @font-face {{
-            font-family: 'Inconsolata';
-            font-style: normal;
-            font-weight: 400;
-            src: local('Inconsolata Regular'), local('Inconsolata-Regular'), url(https://fonts.gstatic.com/s/inconsolata/v17/QldKNThLqRwH-OJ1UHjlKGlW5qhWxg.woff2) format('woff2');
-            unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
-        }}
-        /* latin-ext */
-        @font-face {{
-            font-family: 'Inconsolata';
-            font-style: normal;
-            font-weight: 400;
-            src: local('Inconsolata Regular'), local('Inconsolata-Regular'), url(https://fonts.gstatic.com/s/inconsolata/v17/QldKNThLqRwH-OJ1UHjlKGlX5qhWxg.woff2) format('woff2');
-            unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
-        }}
-        /* latin */
-        @font-face {{
-            font-family: 'Inconsolata';
-            font-style: normal;
-            font-weight: 400;
-            src: local('Inconsolata Regular'), local('Inconsolata-Regular'), url(https://fonts.gstatic.com/s/inconsolata/v17/QldKNThLqRwH-OJ1UHjlKGlZ5qg.woff2) format('woff2');
-            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-        }}
-        body {{
-            font-family: 'Inconsolata', monospace;
-        }}
-    </style>
-</head>
 <body>
 <pre>
 {script} has completed.
@@ -117,11 +86,6 @@ Disk space before:
 {disk_space_before}
 Disk space after:
 {disk_space_after}
----------------------------------------------------
-Directory content before:
-{tree_output_before}
-Directory content after:
-{tree_output_after}
 </pre>
 </body>
 </html>
@@ -133,16 +97,12 @@ Directory content after:
 
 
 while True:
-    if is_roku_free():
-        print("pybiliroku is free now, starting task")
-        try:
-            #run_task("to_mp4.py")
-            run_task("encode.py")
-            #run_task("upload.py")
-            os.system("rm -rf trash")
-        except Exception as e:
-            send_mail('An error has occured', f"<pre>{str(e)}\nIf it happens repeatly, maybe cookies have expired.</pre>")
-    else:
-        print("pybiliroku is busy now")
-    time.sleep(3600)
+    try:
+        #run_task("to_mp4.py")
+        run_task("encode.py")
+        #run_task("upload.py")
+        #os.system("rm -rf trash")
+    except Exception as e:
+        send_mail('An error has occured', f"<pre>{str(e)}\nIf it happens repeatly, maybe cookies have expired.</pre>")
+    time.sleep(10)
 

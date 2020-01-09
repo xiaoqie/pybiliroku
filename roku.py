@@ -34,7 +34,12 @@ log = Logger(f"{room_id} roku")
 
 
 def get_json_from(url):
-    req = urllib.request.Request(url)
+    req = urllib.request.Request(
+        url,
+        headers={
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36',
+        }
+    )
     with urllib.request.urlopen(req, timeout=5) as conn:
         response = conn.read()
         text = response.decode("utf-8")
@@ -48,6 +53,8 @@ def get_info(uid):
         raise RuntimeError("failed request room_init")
     room_id = roomInitRes["data"]["room_id"]
     playUrlRes = get_json_from(f"https://api.live.bilibili.com/room/v1/Room/playUrl?cid={room_id}&qn=0&platform=web")
+    #playUrlRes = get_json_from(f"https://api.live.bilibili.com/xlive/web-room/v1/index/getRoomPlayInfo?room_id={room_id}&play_url=1&mask=1&qn=0&platform=web")
+    #playUrlRes['data'] = playUrlRes['data']['play_url']
     baseInfoRes = get_json_from(f"https://api.live.bilibili.com/room/v1/Room/get_info?room_id={room_id}&from=room")
     return {'roomInitRes': roomInitRes, 'playUrlRes': playUrlRes, 'baseInfoRes': baseInfoRes}
 
@@ -55,14 +62,18 @@ def get_info(uid):
 async def download_flv(flv_url):
     total_downloaded = 0
     req = urllib.request.Request(
-       flv_url, 
+        flv_url, 
         data=None, 
         headers={
-'DNT': '1',
-'Origin': 'https://live.bilibili.com',
-'Referer': f'https://live.bilibili.com/blanc/{original_room_id}',
-'Sec-Fetch-Mode': 'cors',
-'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36',
+            'Origin': 'https://live.bilibili.com',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36',
+            'DNT': '1',
+            'Accept': '*/*',
+            'Sec-Fetch-Site': 'cross-site',
+            'Sec-Fetch-Mode': 'cors',
+            'Referer': f'https://live.bilibili.com/{original_room_id}',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Accept-Language': 'en,zh;q=0.9,ja;q=0.8,zh-CN;q=0.7,zh-TW;q=0.6',
         }
     )
     # FIXME async is not working due to frequent timeout
