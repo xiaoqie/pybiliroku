@@ -60,6 +60,7 @@ class Video:
     def from_filename(filename: str):
         """
         filename: filename with extension.
+        returns None if the file is created in 30 mins
         """
         (video, ext) = os.path.splitext(filename)
 
@@ -69,6 +70,9 @@ class Video:
 
         datetime_string = '-'.join(video.split('-')[0:5])
         datetime_obj = datetime.datetime.strptime(datetime_string, '%Y-%m-%d_%H-%M-%S')
+        if (datetime.datetime.now() - datetime_obj).total_seconds() < 1800:
+            return None
+
         ret.date = (datetime_obj - datetime.timedelta(hours=10)).date()
         ret.time = datetime_obj.time()
         ret.datetime = datetime_obj
@@ -102,6 +106,8 @@ def get_videos() -> Dict[datetime.date, List[Video]]:
         if os.path.isdir(filepath):
             continue
         video = Video.from_filename(filename)
+        if video is None:
+            continue
         (video.path_without_ext, _) = os.path.splitext(filepath)
         date_to_videos[video.date] += [video]
 
