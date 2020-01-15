@@ -2,6 +2,8 @@ import sys
 import json
 import datetime
 import urllib.request
+import logging
+logging.basicConfig(level=logging.INFO)
 from bilibiliupload import *
 from utils import *
 
@@ -42,6 +44,7 @@ for date, video_list in videos.items():
         b.upload(parts=video_parts, title=title, tid=17, tag=["lolo直播录像"], desc='更新喽')
         config['last_uploaded_video_date'] = date.strftime('%Y-%m-%d')
         json.dump(config, open("config.json", "w"))
+        print("success")
         sys.exit()  # upload only once a time
 
 
