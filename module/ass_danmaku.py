@@ -64,7 +64,7 @@ Timer: 100.0000
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: testStyle,黑体,30,&H40ffffff,&H00000000,&H40000000,&H00000000,-1,0,0,0,100,100,0,0.00,1,2,0,7,0,0,0,0
+Style: testStyle,黑体,30,&H00ffffff,&H00000000,&H00000000,&H00000000,-1,0,0,0,100,100,0,0.00,1,2,0,7,0,0,0,0
 
 [Events]
 Format: Layer, Start, End, Style, Actor, MarginL, MarginR, MarginV, Effect, Text

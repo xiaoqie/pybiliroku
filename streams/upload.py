@@ -18,15 +18,20 @@ def get_json_from(url):
 
 config = json.load(open("config.json"))
 
+videos = get_videos()
+unfinished_videos = videos_with(videos, _with=[".flv"])
+videos = videos_with(videos, _with=[".mp4"])
+
+if not videos:
+    print("nothing to do")
+    sys.exit()
+    
 last_uploaded_video_date = datetime.datetime.strptime(config['last_uploaded_video_date'], '%Y-%m-%d').date()
 uploaded_video_info = get_json_from(f"https://api.kaaass.net/biliapi/user/contribute?id={config['bilibili_mid']}")
 uploaded_video_date = [datetime.datetime.strptime(v['title'][1:len('1970-01-01') + 1], '%Y-%m-%d').date() for v in uploaded_video_info['data']]
 
-videos = get_videos()
-videos = videos_with(videos, _with=[".mp4"])
-unfinished_videos = videos_with(videos, _with=[".flv"])
 for date, video_list in videos.items():
-    if date in unfinished_videos:
+    if date in unfinished_videos or datetime.date.today() <= date:
         print(f"{date} is yet to finish encoding")
     elif date in uploaded_video_date:
         print(f"{date} is uploaded and can be deleted")
@@ -36,7 +41,7 @@ for date, video_list in videos.items():
         print(f"{date} has been uploaded, but is yet to be verified")
     else:
         print(f"{date} is ready to upload")
-        title = f"【{date.strftime('%Y-%m-%d')}】{'，'.join(list(dict.fromkeys([v.title for v in video_list])))}"
+        title = f"【{date.strftime('%Y-%m-%d')}】{'＋'.join(list(dict.fromkeys([v.title for v in video_list])))}"
         print(title)
         b = Bilibili()
         print("login success?", b.login(config['bilibili_username'], config['bilibili_password']))
@@ -47,4 +52,4 @@ for date, video_list in videos.items():
         print("success")
         sys.exit()  # upload only once a time
 
-
+print("nothing to do")

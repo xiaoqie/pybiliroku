@@ -92,15 +92,15 @@ Disk space after:
     """
 
     print(task_duration)
-    if task_duration > 20 or always_send_mail:
-        send_mail("Biliupload Notification", email_content, encode_output)
+    #if task_duration > 20 or always_send_mail:
+    #    send_mail("Biliupload Notification", email_content, encode_output)
 
 
 while True:
     try:
         #run_task("to_mp4.py")
         run_task("encode.py")
-        #run_task("upload.py")
+        run_task("upload.py")
         #os.system("rm -rf trash")
     except Exception as e:
         send_mail('An error has occured', f"<pre>{str(e)}\nIf it happens repeatly, maybe cookies have expired.</pre>")
