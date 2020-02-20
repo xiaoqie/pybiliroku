@@ -5,6 +5,7 @@ import time
 import subprocess
 import os
 import sys
+import traceback
 
 import smtplib
 from email.mime.multipart import MIMEMultipart
@@ -13,7 +14,9 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email.utils import COMMASPACE, formatdate
 
+
 always_send_mail = False
+
 
 def get_logging_time():
     try:
@@ -24,16 +27,17 @@ def get_logging_time():
     except Exception as e:
         return 0
 
+
 def is_roku_free():
     return time.time() - get_logging_time() > 3*3600
 
+
 def execute_and_check_output(cmd):
     print(f"Starting {' '.join(cmd)}")
-    try:
-        output = subprocess.check_output(cmd, universal_newlines=True, stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError as e:
-        raise Exception(f"{' '.join(cmd)} returned non-zero status, output:\n {e.output}")
-    return str(output).strip()
+    ret_code = os.system(' '.join(cmd))
+    if ret_code != 0:
+        raise Exception(f"{cmd} returns non-zero status {ret_code}.")
+
 
 def send_mail(title, content, attachment=""):
     config = json.load(open("config.json"))
@@ -60,40 +64,9 @@ def send_mail(title, content, attachment=""):
     smtp.sendmail(msg['From'], msg['To'], msg.as_string())
     smtp.close()
 
+
 def run_task(script):
-    t0 = time.time()
-
-    datetime_before = execute_and_check_output(['date'])
-    disk_space_before = execute_and_check_output(['df', '-h', '--type', 'ext4'])
-    tree_output_before = execute_and_check_output(['tree', '-N', "--noreport", "-h", '.'])
-    encode_output = execute_and_check_output([sys.executable, script])
-    tree_output_after = execute_and_check_output(['tree', '-N', "--noreport", "-h", '.'])
-    disk_space_after = execute_and_check_output(['df', '-h', '--type', 'ext4'])
-    datetime_after = execute_and_check_output(['date'])
-
-    task_duration = time.time() - t0
-
-    email_content = f"""
-<html>
-<body>
-<pre>
-{script} has completed.
-start time: {datetime_before}
-end time:   {datetime_after}
-duration:   {task_duration} seconds
----------------------------------------------------
-Disk space before:
-{disk_space_before}
-Disk space after:
-{disk_space_after}
-</pre>
-</body>
-</html>
-    """
-
-    print(task_duration)
-    #if task_duration > 20 or always_send_mail:
-    #    send_mail("Biliupload Notification", email_content, encode_output)
+    execute_and_check_output([sys.executable, script])
 
 
 while True:
@@ -103,6 +76,6 @@ while True:
         run_task("upload.py")
         #os.system("rm -rf trash")
     except Exception as e:
-        send_mail('An error has occured', f"<pre>{str(e)}\nIf it happens repeatly, maybe cookies have expired.</pre>")
-    time.sleep(10)
+        send_mail('An error has occured', f"<pre>{str(e)}\n{traceback.format_exc()}\nIf it happens repeatly, maybe cookies have expired.</pre>")
+    time.sleep(100)
 

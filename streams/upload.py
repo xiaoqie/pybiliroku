@@ -41,12 +41,12 @@ for date, video_list in videos.items():
         print(f"{date} has been uploaded, but is yet to be verified")
     else:
         print(f"{date} is ready to upload")
-        title = f"【{date.strftime('%Y-%m-%d')}】{'＋'.join(list(dict.fromkeys([v.title for v in video_list])))}"
+        title = f"【{date.strftime('%Y-%m-%d')}】{'＋'.join([t.replace('！', '') for t in list(dict.fromkeys([v.title for v in video_list]))])}"
         print(title)
         b = Bilibili()
         print("login success?", b.login(config['bilibili_username'], config['bilibili_password']))
         video_parts = [VideoPart(f"{video.path_without_ext}.mp4", f"{video.video_name}") for video in video_list]
-        b.upload(parts=video_parts, title=title, tid=17, tag=["lolo直播录像"], desc='更新喽')
+        b.upload(parts=video_parts, title=title, tid=17, tag=["lolo直播录像"], desc='2+3=?')
         config['last_uploaded_video_date'] = date.strftime('%Y-%m-%d')
         json.dump(config, open("config.json", "w"))
         print("success")

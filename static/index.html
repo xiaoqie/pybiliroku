@@ -226,7 +226,7 @@
                 async: true,
                 success: function (data) {
                     $("#room" + roomID + "_uname").html(data['info']['uname'])
-                    $("#room" + roomID + "_face").attr("src", data['info']['face'] + "@100w_100h.webp")
+                    $("#room" + roomID + "_face").attr("src", data['info']['face'])
                 }
             });
         }
