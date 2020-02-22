@@ -8,7 +8,14 @@ verify_ssl = true
 aiohttp = "*"
 psutil = "*"
 websockets = "*"
-selenium = "*"
+bilibiliupload = "*"
 
 [requires]
 python_version = "3.7"
+
+[scripts]
+web = "python manager.py"
+scheduler = "sh -c \"cd streams; python schedule.py\""
+encode = "sh -c \"cd streams; python encode.py\""
+upload = "sh -c \"cd streams; python upload.py\""
+
