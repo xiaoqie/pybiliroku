@@ -2,6 +2,12 @@
 <html>
 
 <head>
+    <link rel="shortcut icon" type="image/png" href="/favicon.png"/>
+    <link rel="apple-touch-icon" href="favicon.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="favicon.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="favicon.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="favicon.png">
+
     <!--Import Google Icon Font-->
     <style>
         @font-face {
@@ -9,6 +15,23 @@
             font-style: normal;
             font-weight: 400;
             src: url(fonts/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format('woff2');
+        }
+
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+              -webkit-appearance: none; 
+                margin: 0; 
+        }
+
+        .room-id-input {
+            position: relative;
+        }
+
+        .room-id-input i {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
         }
 
         .material-icons {
@@ -48,7 +71,7 @@
         function formatBytes(a, b) { 
             if (0 == a) return "0 Bytes"; 
             var c = 1024, d = b || 2, e = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"], f = Math.floor(Math.log(a) / Math.log(c)); 
-            return parseFloat((a / Math.pow(c, f)).toFixed(d)).toFixed(4) + " " + e[f] 
+            return parseFloat((a / Math.pow(c, f)).toFixed(d)).toFixed(b) + " " + e[f] 
         }
         
         function toHHMMSS(sec_num) {
@@ -93,6 +116,7 @@
     <div class="container">
         <h1 class="header"> </h1>
         <div class="row">
+            <!--
             <div class="input-field col offset-s2">
                 <input placeholder="Room ID" id="room_id" type="number" class="validate" min=0>
                 <label for="room_id">Start recording: </label>
@@ -100,6 +124,12 @@
             <a class="btn-floating btn-large waves-effect waves-light red modal-trigger" id="open_room" href="#open_room_modal">
                 <i class="material-icons">add</i>
             </a>
+            -->
+            <div class="room-id-input col offset-s1">
+                <input placeholder="Room ID" pattern="[0-9]*" type="number" min="0" class="validate" id="room_id">
+                <i class="material-icons" id="open_room">add</i>
+            </div>
+            <p class="disk col offset-s1">Loading Disk Usage</p>
         </div>
         <ul id="tasks" class="collapsible popout">
         </ul>
@@ -129,15 +159,6 @@
                 <input id="open_on_init" type="text" class="validate" placeholder="Empty">
                 <label for="open_on_init">Automatically starts recording on startup: </label>
             </div>
-            <!-- <div class="input-field col s12">
-                <select multiple id="open_on_init_multiple_selection">
-                    <option value="" disabled selected>Automatically starts recording: </option>
-                    <option value="1">Placeholder 1</option>
-                    <option value="2" selected>Placeholder 2</option>
-                    <option value="3" selected>Placeholder 3</option>
-                </select>
-                <label>Automatically starts recording:</label>
-            </div> -->
         </div>
         <div id="open_room_modal_buttons" class="modal-footer">
             <a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat' onclick="save_config()">Save</a>
@@ -145,13 +166,9 @@
         </div>
     </div>
 
-    <script>
-        $(document).ready(function () {
-            $('select').material_select();
-        });
-        $(document).ready(function () {
-            $('.modal').modal();
-        });
+    <script defer>
+        $('select').material_select();
+        $('.modal').modal();
         function openRoom(room_id) {
             $.get("/open?room_id=" + room_id, function (data) {
                 Materialize.toast(data, 5000)
@@ -215,9 +232,8 @@
                 $("#open_room_confirm_content").html("Please enter room ID.")
                 $("#open_room_modal_buttons").html("<a href='#!' class='modal-action modal-close waves-effect waves-green btn-flat'>Okay</a>")
             }
+            $("#open_room_modal").modal("open")
         })
-    </script>
-    <script>
         function getUserInfo(roomID) {
             $.get({
                 type: "get",
@@ -231,7 +247,7 @@
             });
         }
     </script>
-    <script>
+    <script defer>
         var hist = [];
         const n_records = 10;
         for (var i = 0; i < n_records; i++) {
@@ -375,6 +391,17 @@
         }
         setInterval(update, 1000)
         update() // update manually once
+    </script>
+    <script defer>
+        $.get({
+            type: "get",
+            url: `/get_disk_usage`,
+            dataType: 'json',
+            async: true,
+            success: function (data) {
+                $(".disk").html(`${formatBytes(data['used'], 1)}/${formatBytes(data['total'], 1)}`)
+            }
+        });
     </script>
 
 </html>

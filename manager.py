@@ -9,6 +9,7 @@ import urllib.parse
 import urllib.request
 import re
 import sys
+import shutil
 
 
 def IndexMiddleware(index='index.html'):
@@ -191,6 +192,11 @@ async def do_get_config(request):
     return web.Response(text=json.dumps(get_config()))
 
 
+async def do_get_disk_usage(request):
+    total, used, free = shutil.disk_usage("/")
+    return web.Response(text=json.dumps({"total": total, "used": used}))
+
+
 async def do_save_config(request):
     if "json" not in request.query:
         return web.Response(text="no argument")
@@ -244,6 +250,7 @@ app.router.add_get("/info", do_info)
 app.router.add_get("/get_config", do_get_config)
 app.router.add_get("/save_config", do_save_config)
 app.router.add_get("/get_user_info", do_get_user_info)
+app.router.add_get("/get_disk_usage", do_get_disk_usage)
 app.router.add_static('/', path='static')
 
 load_on_init = get_config()["load_on_init"]
