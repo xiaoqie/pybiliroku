@@ -76,6 +76,7 @@ while True:
         run_task("upload.py")
         #os.system("rm -rf trash")
     except Exception as e:
-        send_mail('An error has occured', f"<pre>{str(e)}\n{traceback.format_exc()}\nIf it happens repeatly, maybe cookies have expired.</pre>")
+        print(traceback.format_exc())
+        #send_mail('An error has occured', f"<pre>{str(e)}\n{traceback.format_exc()}\nIf it happens repeatly, maybe cookies have expired.</pre>")
     time.sleep(100)
 

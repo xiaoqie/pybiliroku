@@ -73,7 +73,7 @@ class Video:
         if (datetime.datetime.now() - datetime_obj).total_seconds() < 1800:
             return None
 
-        ret.date = (datetime_obj - datetime.timedelta(hours=10)).date()
+        ret.date = (datetime_obj - datetime.timedelta(hours=6)).date()
         ret.time = datetime_obj.time()
         ret.datetime = datetime_obj
         full_title = video[len('0000-00-00_00-00-00-'):]
@@ -117,6 +117,9 @@ def get_videos() -> Dict[datetime.date, List[Video]]:
 def move_to_trash(filepath):
     os.makedirs('trash', exist_ok=True)
     shutil.move(filepath, "trash/" + os.path.basename(filepath))
+
+def empty_trash():
+    shutil.rmtree("trash")
 
 def os_system_ensure_success(cmd):
     print(cmd)

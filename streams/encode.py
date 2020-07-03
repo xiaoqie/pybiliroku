@@ -22,7 +22,7 @@ if videos.items():
                     out.write(inp.read())
 
         scale = '1280:720'
-        bitrate = '1500k'
+        bitrate = '1200k'
         #scale = '852:480'
         #bitrate = '1200k'
         #scale = '1920:1080'
@@ -31,4 +31,5 @@ if videos.items():
         os_system_ensure_success(cmd)
         move_to_trash(f'{video.path_without_ext}.flv')
         move_to_trash(f'{video.path_without_ext}.ass')
+        empty_trash()
 
