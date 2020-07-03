@@ -27,8 +27,8 @@ if not videos:
     sys.exit()
     
 last_uploaded_video_date = datetime.datetime.strptime(config['last_uploaded_video_date'], '%Y-%m-%d').date()
-uploaded_video_info = get_json_from(f"https://api.kaaass.net/biliapi/user/contribute?id={config['bilibili_mid']}")
-uploaded_video_date = [datetime.datetime.strptime(v['title'][1:len('1970-01-01') + 1], '%Y-%m-%d').date() for v in uploaded_video_info['data']]
+uploaded_video_info = get_json_from(f"http://space.bilibili.com/ajax/member/getSubmitVideos?mid={config['bilibili_mid']}")
+uploaded_video_date = [datetime.datetime.strptime(v['title'][1:len('1970-01-01') + 1], '%Y-%m-%d').date() for v in uploaded_video_info['data']['vlist']]
 
 for date, video_list in videos.items():
     if date in unfinished_videos or datetime.datetime.now() <= datetime.datetime.combine(date, datetime.time()) + datetime.timedelta(days=1, hours=6):
