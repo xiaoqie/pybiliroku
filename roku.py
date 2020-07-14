@@ -52,7 +52,7 @@ def get_info(uid):
     if roomInitRes["msg"] != "ok":
         raise RuntimeError("failed request room_init")
     room_id = roomInitRes["data"]["room_id"]
-    playUrlRes = get_json_from(f"https://api.live.bilibili.com/room/v1/Room/playUrl?cid={room_id}&qn=0&platform=web")
+    playUrlRes = get_json_from(f"https://api.live.bilibili.com/room/v1/Room/playUrl?cid={room_id}&qn=400&platform=web")
     #playUrlRes = get_json_from(f"https://api.live.bilibili.com/xlive/web-room/v1/index/getRoomPlayInfo?room_id={room_id}&play_url=1&mask=1&qn=0&platform=web")
     #playUrlRes['data'] = playUrlRes['data']['play_url']
     baseInfoRes = get_json_from(f"https://api.live.bilibili.com/room/v1/Room/get_info?room_id={room_id}&from=room")
@@ -95,7 +95,8 @@ room_id = info['roomInitRes']['data']['room_id']
 short_id = info['roomInitRes']['data']['short_id']
 uid = info['roomInitRes']['data']['uid']
 is_living = info['baseInfoRes']['data']['live_status'] == 1
-flv_url = random.choice(info['playUrlRes']['data']["durl"])["url"] if "playUrlRes" in info else None
+#flv_url = random.choice(info['playUrlRes']['data']["durl"])["url"] if "playUrlRes" in info else None
+flv_url = info['playUrlRes']['data']["durl"][-1]["url"] if "playUrlRes" in info else None
 current_qn = info['playUrlRes']['data']["current_qn"] if "playUrlRes" in info else None
 title = info['baseInfoRes']['data']['title'].replace('/', 'or').replace(' ', '_')
 log.info(f"roomID: {room_id}, title: {title}, qn: {current_qn}, flvURL: {flv_url}")
@@ -107,6 +108,11 @@ if not is_living:
     # Because if it is streaming, we shouldn't wait to restart.
     time.sleep(30)
     quit()
+
+#if room_id == 1004 and current_qn == 10000:
+    # a dirty hack. bilibili cdn cannot stream 7500kbps to my server?
+#    time.sleep(1)
+#    raise RuntimeError("It seems that we cannot record qn=10000.")
 
 start_timestamp = time.time()
 savepath = savepath.format(**globals())

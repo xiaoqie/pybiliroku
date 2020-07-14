@@ -13,40 +13,8 @@ import shutil
 
 
 def IndexMiddleware(index='index.html'):
-    """Middleware to serve index files (e.g. index.html) when static directories are requested.
-
-    Usage:
-    ::
-
-        from aiohttp import web
-        from aiohttp_index import IndexMiddleware
-        app = web.Application(middlewares=[IndexMiddleware()])
-        app.router.add_static('/', 'static')
-
-    ``app`` will now serve ``static/index.html`` when ``/`` is requested.
-
-    :param str index: The name of a directory's index file.
-    :returns: The middleware factory.
-    :rtype: function
-
-    Borrowed from: http://pythonhosted.org/aiohttp-index/_modules/aiohttp_index/index.html#IndexMiddleware
-    License?
-    """
     async def middleware_factory(app, handler):
-        """Middleware factory method.
-
-        :type app: aiohttp.web.Application
-        :type handler: function
-        :returns: The retry handler.
-        :rtype: function
-        """
         async def index_handler(request):
-            """Handler to serve index files (index.html) for static directories.
-
-            :type request: aiohttp.web.Request
-            :returns: The result of the next handler in the chain.
-            :rtype: aiohttp.web.Response
-            """
             try:
                 filename = request.match_info['filename']
                 if not filename:
@@ -84,6 +52,7 @@ def kill_proc_tree(pid, sig=signal.SIGTERM, include_parent=True,
 status = {}
 processes = {}
 port = 2004
+terminate = 1800
 
 
 def report(room_id, downloaded_size, start_timestamp):
@@ -106,7 +75,8 @@ def open_room(room_id):
             sys.executable, "roku_loop.py",
             "--room-id", str(room_id),
             "--savepath", get_config()['savepath'],
-            "--port", str(port)
+            "--port", str(port),
+            "--terminate", str(terminate)
         ])
         return True
     else:

@@ -27,7 +27,7 @@ log = Logger(f"{args.room_id} danmaku")
 def get_cmt_server(room_id):
     with urllib.request.urlopen(f"https://api.live.bilibili.com/room/v1/Danmu/getConf?room_id={room_id}&platform=pc&player=web:%d", timeout=5) as conn:
         content = json.loads(conn.read().decode("utf-8"))
-        server = random.choice(content['data']['host_server_list'])
+        server = content['data']['host_server_list'][-1]
         return server
 
 

@@ -16,6 +16,14 @@ else:
     NUL = 'NUL'
 
 
+def command_output(cmd):
+    try:
+        output = subprocess.check_output(cmd, universal_newlines=True, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        raise Exception(f"{' '.join(cmd)} returned non-zero status, output:\n {e.output}")
+    return str(output).strip()
+
+
 class BlockPrint:
     def __init__(self):
         self.total_line = 0
@@ -41,6 +49,15 @@ class Video:
     time: datetime.time
     datetime: datetime.datetime
     streamer: str
+    stored_duration: float
+    
+    @property
+    def duration(self):
+        if not ".mp4" in self.available_exts:
+            return -1
+        if not self.stored_duration:
+            self.stored_duration = float(command_output(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", f"{self.path_without_ext}.mp4"]))
+        return self.stored_duration
 
     def __str__(self):
         return f"""Video(video_name: {self.video_name}, available_exts: {self.available_exts}, path_without_ext: {self.path_without_ext}, datetime:{self.datetime}, title: {self.title}, date: {self.date}, time: {self.time}, streamer: {self.streamer})"""
@@ -55,6 +72,7 @@ class Video:
         self.title = None
         self.date = None
         self.streamer = None
+        self.stored_duration = None
 
     @staticmethod
     def from_filename(filename: str):
@@ -70,7 +88,7 @@ class Video:
 
         datetime_string = '-'.join(video.split('-')[0:5])
         datetime_obj = datetime.datetime.strptime(datetime_string, '%Y-%m-%d_%H-%M-%S')
-        if (datetime.datetime.now() - datetime_obj).total_seconds() < 1800:
+        if (datetime.datetime.now() - datetime_obj).total_seconds() < 1810:
             return None
 
         ret.date = (datetime_obj - datetime.timedelta(hours=6)).date()
