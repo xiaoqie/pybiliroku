@@ -9,6 +9,7 @@ aiohttp = "*"
 psutil = "*"
 websockets = "*"
 bilibiliupload = "*"
+bilibiliuploader = {git = "https://github.com/FortuneDayssss/BilibiliUploader.git"}
 
 [requires]
 python_version = "3.7"
@@ -18,4 +19,3 @@ web = "python manager.py"
 scheduler = "sh -c \"cd streams; python schedule.py\""
 encode = "sh -c \"cd streams; python encode.py\""
 upload = "sh -c \"cd streams; python upload.py\""
-

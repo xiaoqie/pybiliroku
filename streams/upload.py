@@ -1,3 +1,4 @@
+exit()
 import sys
 import json
 import datetime
@@ -28,7 +29,7 @@ def upload(video_list, title):
             l.write(f"file '{os.getcwd()}/{video.path_without_ext}.mp4'\n")
     cmd = f"ffmpeg -y -f concat -safe 0 -i concat.list -c copy concat.mp4"
     os_system_ensure_success(cmd)
-    b.upload(parts=[VideoPart("concat.mp4", title)], title=title, tid=17, tag=["lolo直播录像"], desc='大概每天早上八点更新？b站单p视频有10个小时的限制。如果时长超过十个小时，会拆成两个视频上传。换了个机子，可以带更高码率了？')
+    b.upload(parts=[VideoPart("concat.mp4", title)], title=title, tid=17, tag=["lolo直播录像"], desc='大概每天早上八点更新？b站单p视频有10个小时的限制。如果时长超过十个小时，会拆成两个视频上传。')
     os.remove("concat.list")
     os.remove("concat.mp4")
 
@@ -44,8 +45,9 @@ if not videos:
     sys.exit()
     
 last_uploaded_video_date = datetime.datetime.strptime(config['last_uploaded_video_date'], '%Y-%m-%d').date()
-uploaded_video_info = get_json_from(f"http://space.bilibili.com/ajax/member/getSubmitVideos?mid={config['bilibili_mid']}")
-uploaded_video_date = [datetime.datetime.strptime(v['title'][1:len('1970-01-01') + 1], '%Y-%m-%d').date() for v in uploaded_video_info['data']['vlist']]
+#uploaded_video_info = get_json_from(f"http://space.bilibili.com/ajax/member/getSubmitVideos?mid={config['bilibili_mid']}")
+uploaded_video_info = get_json_from(f"https://api.bilibili.com/x/space/arc/search?mid={config['bilibili_mid']}&ps=30&tid=0&pn=1&keyword=&order=pubdate&jsonp=jsonp")
+uploaded_video_date = [datetime.datetime.strptime(v['title'][1:len('1970-01-01') + 1], '%Y-%m-%d').date() for v in uploaded_video_info['data']['list']['vlist']]
 
 for date, video_list in videos.items():
     if date in unfinished_videos or datetime.datetime.now() <= datetime.datetime.combine(date, datetime.time()) + datetime.timedelta(days=1, hours=6):

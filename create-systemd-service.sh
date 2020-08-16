@@ -12,7 +12,7 @@ After=network.target
 [Service]
 User=`whoami`
 Group=`id -g -n`
-ExecStart=`which pipenv` run $1
+ExecStart=/bin/sh -c \"`which pipenv` run $1\"
 Environment=\"PYTHONUNBUFFERED=TRUE\"
 WorkingDirectory=`pwd`
 
