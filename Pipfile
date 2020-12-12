@@ -8,8 +8,6 @@ verify_ssl = true
 aiohttp = "*"
 psutil = "*"
 websockets = "*"
-bilibiliupload = "*"
-bilibiliuploader = {git = "https://github.com/FortuneDayssss/BilibiliUploader.git"}
 
 [requires]
 python_version = "3.7"
