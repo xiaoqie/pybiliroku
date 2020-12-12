@@ -1,6 +1,7 @@
 import json
 import os
 import math
+import itertools
 from datetime import datetime
 from urllib import parse
 import hashlib
@@ -251,8 +252,19 @@ class BilibiliUploader():
         )
 
         return r.json()["data"]["url"]
+    
+    def upload_video_part_with_retry(self, video_part: VideoPart):
+        local_file_name = video_part.path
+        for r in itertools.count(1):
+            try: 
+                self.upload_video_part(video_part)
+                break
+            except Exception as err:
+                print(local_file_name, str(err), "part retry", r)
+                if r >= self.max_part_retry:
+                    raise RuntimeError(f"part {local_file_name} retry limit {r} reached!")
 
-    def upload_video_part(self, video_part: VideoPart, max_retry=5):
+    def upload_video_part(self, video_part: VideoPart):
         """
         upload a video file.
         Args:
@@ -260,7 +272,6 @@ class BilibiliUploader():
             sid: session id.
             mid: member id.
             video_part: local video file data.
-            max_retry: max retry number for each chunk.
 
         Returns:
             status: success or fail.
@@ -294,7 +305,6 @@ class BilibiliUploader():
         file_hash = hashlib.md5()
 
         def upload_chunk(chunk_data, chunk_id):
-            video_part.progress = (chunk_id + 1, chunk_total_num)
             files = {
                 'version': (None, '2.0.0.1054'),
                 'filesize': (None, CHUNK_SIZE),
@@ -310,12 +320,13 @@ class BilibiliUploader():
                 cookies={
                     'PHPSESSID': server_file_name
                 },
+                timeout=self.chunk_timeout
             )
-            #print(r.status_code, r.content)
 
             if not (r.status_code == 200 and r.json()['OK'] == 1):
-                raise RuntimeError(r.status_code + " " + r.content.decode())
+                raise RuntimeError(f"{r.status_code} {r.content.decode()}")
 
+            video_part.progress = (chunk_id + 1, chunk_total_num)
             # print progress
             for p in self.parts:
                 width = 10
@@ -326,16 +337,17 @@ class BilibiliUploader():
             for chunk_id in range(0, chunk_total_num):
                 chunk_data = f.read(CHUNK_SIZE)
 
-                for r in range(max_retry):
+                for r in itertools.count(1):
                     try: 
                         upload_chunk(chunk_data, chunk_id)
                         break
-                    except RuntimeError as err:
-                        if r >= max_retry - 1:
-                            raise
-                        print(local_file_name, str(err), "retry,", r)
+                    except Exception as err:
+                        print(local_file_name, str(err), "chunk retry,", r)
+                        if r >= self.max_chunk_retry:
+                            raise RuntimeError(f"chunk {chunk_id} of {local_file_name} retry limit {r} reached!")
 
                 file_hash.update(chunk_data)
+
         #print(file_hash.hexdigest())
 
         # complete upload
@@ -353,12 +365,12 @@ class BilibiliUploader():
             headers=headers,
         )
         if not (r.status_code == 200 and r.json()['OK'] == 1):
-            raise RuntimeError(r.status_code + " " + r.content.decode())
+            raise RuntimeError(f"{r.status_code} {r.content.decode()}")
         print(video_part.title, "complete", r.status_code, r.content.decode())
 
         video_part.server_file_name = server_file_name
+        return r.content.decode()
 
-        return True
 
     def upload(self,
                parts,
@@ -378,12 +390,15 @@ class BilibiliUploader():
             parts = [parts]
 
         self.parts = parts
+        self.max_chunk_retry = 100
+        self.max_part_retry = 5
+        self.chunk_timeout = 15
 
         with ThreadPoolExecutor(max_workers=thread_pool_workers) as tpe:
             t_list = []
             for video_part in parts:
                 print("upload {} added in pool".format(video_part.title))
-                t_obj = tpe.submit(self.upload_video_part, video_part, max_retry)
+                t_obj = tpe.submit(self.upload_video_part_with_retry, video_part)
                 t_obj.video_part = video_part
                 t_list.append(t_obj)
 
@@ -440,7 +455,7 @@ class BilibiliUploader():
             json=post_data,
         )
         if not (r.status_code == 200 and r.json()['code'] == 0):
-            raise RuntimeError(r.status_code + " " + r.content.decode())
+            raise RuntimeError(f"{r.status_code} {r.content.decode()}")
 
         print("submit", r.status_code, r.content.decode())
 

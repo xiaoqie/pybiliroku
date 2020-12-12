@@ -23,8 +23,7 @@ def upload(video_list, title):
     uploader = BilibiliUploader()
     uploader.login_by_access_token_file("bilibili_token.json")
     video_parts = [VideoPart(path=f"{video.path_without_ext}.mp4", title=f"{video.video_name}") for video in video_list]
-    if not uploader.upload(parts=video_parts, title=title, tid=17, tag="lolo直播录像", desc='测试分p上传', copyright=1, thread_pool_workers=5):
-        raise Exception("error on upload")
+    uploader.upload(parts=video_parts, title=title, tid=17, tag="lolo直播录像", desc='测试分p上传', copyright=1, thread_pool_workers=5, max_retry=10)
 
 
 config = json.load(open("config.json"))
