@@ -21,10 +21,10 @@ if videos.items():
                 with open(f'temp.ass', 'w', encoding='utf-8') as out:
                     out.write(inp.read())
 
-        scale = '1280:720'
-        bitrate = '2000k'
-        #scale = '1920:1080'
-        #bitrate = '3000k'
+        #scale = '1280:720'
+        #bitrate = '2000k'
+        scale = '1920:1080'
+        bitrate = '3000k'
         cmd = f'{ffmpeg} -analyzeduration 2147483647 -probesize 2147483647 -y -f live_flv -i "{video.path_without_ext}.flv" -vf "subtitles=temp.ass, scale={scale}" -c:v libx264 -preset veryfast -b:v {bitrate} -c:a aac -b:a 128k -r 30 -max_muxing_queue_size 20000 "{video.path_without_ext}.mp4"'
         os_system_ensure_success(cmd)
         move_to_trash(f'{video.path_without_ext}.flv')

@@ -1,12 +1,10 @@
-exit()
 import sys
 import json
 import datetime
 import urllib.request
 from pprint import pprint
-import logging
-logging.basicConfig(level=logging.INFO)
-from bilibiliupload import *
+from bilibiliuploader.bilibiliuploader import BilibiliUploader
+from bilibiliuploader.core import VideoPart
 from utils import *
 
 
@@ -22,16 +20,12 @@ def get_json_from(url):
 def upload(video_list, title):
     print(title)
     pprint([video.video_name for video in video_list])
-    b = Bilibili(config['bilibili_cookie'])
-    #print("login success?", b.login(config['bilibili_username'], config['bilibili_password']))
-    with open("concat.list", "w") as l:
-        for video in video_list:
-            l.write(f"file '{os.getcwd()}/{video.path_without_ext}.mp4'\n")
-    cmd = f"ffmpeg -y -f concat -safe 0 -i concat.list -c copy concat.mp4"
-    os_system_ensure_success(cmd)
-    b.upload(parts=[VideoPart("concat.mp4", title)], title=title, tid=17, tag=["lolo直播录像"], desc='大概每天早上八点更新？b站单p视频有10个小时的限制。如果时长超过十个小时，会拆成两个视频上传。')
-    os.remove("concat.list")
-    os.remove("concat.mp4")
+
+    uploader = BilibiliUploader()
+    uploader.login_by_access_token_file("bilibili_token.json")
+    video_parts = [VideoPart(path=f"{video.path_without_ext}.mp4", title=f"{video.video_name}") for video in video_list]
+    if not uploader.upload(parts=video_parts, title=title, tid=17, tag="lolo直播录像", desc='测试分p上传', copyright=1, thread_pool_workers=5):
+        raise Exception("error on upload")
 
 
 config = json.load(open("config.json"))
@@ -45,31 +39,23 @@ if not videos:
     sys.exit()
     
 last_uploaded_video_date = datetime.datetime.strptime(config['last_uploaded_video_date'], '%Y-%m-%d').date()
-#uploaded_video_info = get_json_from(f"http://space.bilibili.com/ajax/member/getSubmitVideos?mid={config['bilibili_mid']}")
 uploaded_video_info = get_json_from(f"https://api.bilibili.com/x/space/arc/search?mid={config['bilibili_mid']}&ps=30&tid=0&pn=1&keyword=&order=pubdate&jsonp=jsonp")
 uploaded_video_date = [datetime.datetime.strptime(v['title'][1:len('1970-01-01') + 1], '%Y-%m-%d').date() for v in uploaded_video_info['data']['list']['vlist']]
 
 for date, video_list in videos.items():
-    if date in unfinished_videos or datetime.datetime.now() <= datetime.datetime.combine(date, datetime.time()) + datetime.timedelta(days=1, hours=6):
+    if datetime.datetime.now() <= datetime.datetime.combine(date, datetime.time()) + datetime.timedelta(days=1, hours=6):
         print(f"{date} encoding isn't finished yet")
     elif date in uploaded_video_date:
         print(f"{date} is uploaded and can be deleted")
         for video in video_list:
             move_to_trash(f"{video.path_without_ext}.mp4")
+        empty_trash()
     elif date <= last_uploaded_video_date:
         print(f"{date} has been uploaded, but is not ready to watch yet")
     else:
         print(f"{date} is ready to upload")
-        total_duration = sum(video.duration for video in video_list)
-        if total_duration < 36000:
-            title = f"【{date.strftime('%Y-%m-%d')}】{'＋'.join([t.replace('！', '') for t in list(dict.fromkeys([v.title for v in video_list]))])}"
-            upload(video_list, title)
-        else:
-            split_index = next(i for i in range(len(video_list)) if sum(video.duration for video in video_list[0:i+1]) >= 10*3600)
-            title = f"【{date.strftime('%Y-%m-%d')}第一部分】{'＋'.join([t.replace('！', '') for t in list(dict.fromkeys([v.title for v in video_list]))])}"
-            upload(video_list[0:split_index], title)
-            title = f"【{date.strftime('%Y-%m-%d')}第二部分】{'＋'.join([t.replace('！', '') for t in list(dict.fromkeys([v.title for v in video_list]))])}"
-            upload(video_list[split_index:], title)
+        title = f"【{date.strftime('%Y-%m-%d')}】{'＋'.join([t.replace('！', '') for t in list(dict.fromkeys([v.title for v in video_list]))])}"
+        upload(video_list, title)
 
         config['last_uploaded_video_date'] = date.strftime('%Y-%m-%d')
         json.dump(config, open("config.json", "w"), indent=4)

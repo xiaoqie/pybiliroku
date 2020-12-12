@@ -52,7 +52,7 @@ def get_info(uid):
     if roomInitRes["msg"] != "ok":
         raise RuntimeError("failed request room_init")
     room_id = roomInitRes["data"]["room_id"]
-    playUrlRes = get_json_from(f"https://api.live.bilibili.com/room/v1/Room/playUrl?cid={room_id}&qn=400&platform=web")
+    playUrlRes = get_json_from(f"https://api.live.bilibili.com/room/v1/Room/playUrl?cid={room_id}&qn=10000&platform=web")
     #playUrlRes = get_json_from(f"https://api.live.bilibili.com/xlive/web-room/v1/index/getRoomPlayInfo?room_id={room_id}&play_url=1&mask=1&qn=0&platform=web")
     #playUrlRes['data'] = playUrlRes['data']['play_url']
     baseInfoRes = get_json_from(f"https://api.live.bilibili.com/room/v1/Room/get_info?room_id={room_id}&from=room")

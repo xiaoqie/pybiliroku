@@ -123,6 +123,3 @@ def on_end():
     global file
     file.close()
 
-    if danmaku_count == 0:
-        os.remove(savepath)
-        log.info("removed empty %s" % savepath)

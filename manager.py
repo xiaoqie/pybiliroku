@@ -163,6 +163,7 @@ async def do_get_config(request):
 
 
 async def do_get_disk_usage(request):
+    savepath = os.path.dirname(get_config()["savepath"].split("{")[0])
     total, used, free = shutil.disk_usage("/")
     return web.Response(text=json.dumps({"total": total, "used": used}))
 
