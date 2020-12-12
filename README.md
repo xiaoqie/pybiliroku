@@ -5,7 +5,7 @@
 录播的逻辑部分参考了 [zyzsdy/biliroku](https://github.com/zyzsdy/biliroku)
 
 ## Requirements
-见Pipfile
+见[Pipfile](Pipfile)
 
 ## 使用方法
 ### 使用基于浏览器的录播机管理器
