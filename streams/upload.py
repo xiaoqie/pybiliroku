@@ -3,8 +3,7 @@ import json
 import datetime
 import urllib.request
 from pprint import pprint
-from bilibiliuploader.bilibiliuploader import BilibiliUploader
-from bilibiliuploader.core import VideoPart
+from bilibiliuploader import BilibiliUploader, VideoPart
 from utils import *
 
 
