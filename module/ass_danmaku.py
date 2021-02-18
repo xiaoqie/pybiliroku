@@ -69,7 +69,6 @@ Style: testStyle,WenQuanYi Micro Hei,30,&H00ffffff,&H00000000,&H00000000,&H00000
 [Events]
 Format: Layer, Start, End, Style, Actor, MarginL, MarginR, MarginV, Effect, Text
 """)
-    file.flush()
 
 
 def char_len(text):

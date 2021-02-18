@@ -1,3 +1,4 @@
+exit()
 import sys
 import json
 import datetime
@@ -23,7 +24,7 @@ def upload(video_list, title):
     uploader = BilibiliUploader()
     uploader.login_by_access_token_file("bilibili_token.json")
     video_parts = [VideoPart(path=f"{video.path_without_ext}.mp4", title=f"{video.video_name}") for video in video_list]
-    uploader.upload(parts=video_parts, title=title, tid=17, tag="lolo直播录像", desc='测试分p上传', copyright=1, thread_pool_workers=5, max_retry=10)
+    uploader.upload(parts=video_parts, title=title, tid=17, tag="lolo直播录像", desc='https://live.bilibili.com/297', copyright=1, thread_pool_workers=5, max_retry=10)
 
 
 config = json.load(open("config.json"))
@@ -41,7 +42,7 @@ uploaded_video_info = get_json_from(f"https://api.bilibili.com/x/space/arc/searc
 uploaded_video_date = [datetime.datetime.strptime(v['title'][1:len('1970-01-01') + 1], '%Y-%m-%d').date() for v in uploaded_video_info['data']['list']['vlist']]
 
 for date, video_list in videos.items():
-    if datetime.datetime.now() <= datetime.datetime.combine(date, datetime.time()) + datetime.timedelta(days=1, hours=6):
+    if datetime.datetime.now() <= datetime.datetime.combine(date, datetime.time()) + datetime.timedelta(days=1, hours=6) or date in unfinished_videos:
         print(f"{date} encoding isn't finished yet")
     elif date in uploaded_video_date:
         print(f"{date} is uploaded and can be deleted")
