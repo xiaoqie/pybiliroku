@@ -1,8 +1,8 @@
-exit()
 import sys
 import json
 import datetime
 import urllib.request
+from pathlib import Path
 from pprint import pprint
 from bilibiliuploader import BilibiliUploader, VideoPart
 from utils import *
@@ -28,37 +28,42 @@ def upload(video_list, title):
 
 
 config = json.load(open("config.json"))
+today = datetime.date.today() - datetime.timedelta(days=1)
 
 videos = get_videos()
 unfinished_videos = videos_with(videos, _with=[".flv"])
 videos = videos_with(videos, _with=[".mp4"])
+videos = sum(videos.values(), [])
 
-if not videos:
-    print("nothing to do")
+uploaded_video_info = get_json_from(f"https://api.bilibili.com/x/space/arc/search?mid={config['bilibili_mid']}&ps=30&tid=0&pn=1&keyword=&order=pubdate&jsonp=jsonp")
+uploaded_video_date = [datetime.datetime.strptime(v['title'][1:len('1970-01-01') + 1], '%Y-%m-%d').date() for v in uploaded_video_info['data']['list']['vlist']]
+for date in uploaded_video_date:
+    folder = Path("297") / date.strftime('%Y-%m-%d')
+    if folder.exists() and folder.is_dir():
+        print(f"remove {folder}")
+        shutil.rmtree(folder)
+
+if unfinished_videos:
+    print("some videos have not finished encoding")
     sys.exit()
     
 last_uploaded_video_date = datetime.datetime.strptime(config['last_uploaded_video_date'], '%Y-%m-%d').date()
-uploaded_video_info = get_json_from(f"https://api.bilibili.com/x/space/arc/search?mid={config['bilibili_mid']}&ps=30&tid=0&pn=1&keyword=&order=pubdate&jsonp=jsonp")
-uploaded_video_date = [datetime.datetime.strptime(v['title'][1:len('1970-01-01') + 1], '%Y-%m-%d').date() for v in uploaded_video_info['data']['list']['vlist']]
+if last_uploaded_video_date >= today:
+    print("today has already been uploaded")
+    sys.exit()
 
-for date, video_list in videos.items():
-    if datetime.datetime.now() <= datetime.datetime.combine(date, datetime.time()) + datetime.timedelta(days=1, hours=6) or date in unfinished_videos:
-        print(f"{date} encoding isn't finished yet")
-    elif date in uploaded_video_date:
-        print(f"{date} is uploaded and can be deleted")
-        for video in video_list:
-            move_to_trash(f"{video.path_without_ext}.mp4")
-        empty_trash()
-    elif date <= last_uploaded_video_date:
-        print(f"{date} has been uploaded, but is not ready to watch yet")
-    else:
-        print(f"{date} is ready to upload")
-        title = f"【{date.strftime('%Y-%m-%d')}】{'＋'.join([t.replace('！', '') for t in list(dict.fromkeys([v.title for v in video_list]))])}"
-        upload(video_list, title)
+print(f"{today} is ready to upload")
+title = f"【{today.strftime('%Y-%m-%d')}】{'＋'.join([t.replace('！', '') for t in list(dict.fromkeys([v.title for v in videos]))])}"
+upload(videos, title)
 
-        config['last_uploaded_video_date'] = date.strftime('%Y-%m-%d')
-        json.dump(config, open("config.json", "w"), indent=4)
-        print("success")
-        sys.exit()  # upload only once a time
+config['last_uploaded_video_date'] = today.strftime('%Y-%m-%d')
+json.dump(config, open("config.json", "w"), indent=4)
 
-print("nothing to do")
+uploaded_folder = Path("297") / today.strftime('%Y-%m-%d')
+uploaded_folder.mkdir()
+for video in videos:
+    videopath = Path(f"{video.path_without_ext}.mp4")
+    videopath.rename(uploaded_folder / videopath.name)
+
+print("success")
+

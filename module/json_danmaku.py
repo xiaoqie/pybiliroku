@@ -5,17 +5,6 @@ import os
 
 enabled = False
 
-
-class Danmaku:
-    def __init__(self, json_obj):
-        self.is_danmaku = json_obj['cmd'] == "DANMU_MSG"
-
-        if self.is_danmaku:
-            self.text = json_obj["info"][1]
-            self.user = json_obj["info"][2][1]
-            self.timestamp = json_obj["info"][0][4]
-
-
 log = None
 start_timestamp = None
 file = None
@@ -32,17 +21,15 @@ def on_start(**kargs):
     file.flush()
 
 
-def on_danmaku(json_obj):
+def on_danmaku(danmaku):
     global ndanmaku, file
-    danmaku = Danmaku(json_obj)
-    if danmaku.is_danmaku:
-        infos = {'user': danmaku.user, 'text': danmaku.text, 'relative_timestamp': danmaku.timestamp - start_timestamp}
-        log.info("{user} sent {text} in relative time {relative_timestamp}".format(**infos))
-        if ndanmaku != 0:
-            file.write(", \n")
-        file.write(json.dumps(infos))
-        file.flush()
-        ndanmaku += 1
+    infos = {'user': danmaku.user, 'text': danmaku.text, 'relative_timestamp': danmaku.timestamp - start_timestamp}
+    log.info("{user} sent {text} in relative time {relative_timestamp}".format(**infos))
+    if ndanmaku != 0:
+        file.write(", \n")
+    file.write(json.dumps(infos))
+    file.flush()
+    ndanmaku += 1
     
 
 def on_end():

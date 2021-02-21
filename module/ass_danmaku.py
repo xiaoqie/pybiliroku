@@ -3,15 +3,7 @@ import time
 import math
 import os
 import unicodedata
-
-class Danmaku:
-    def __init__(self, json_obj):
-        self.is_danmaku = json_obj['cmd'] == "DANMU_MSG"
-
-        if self.is_danmaku:
-            self.text = json_obj["info"][1]
-            self.user = json_obj["info"][2][1]
-            self.timestamp = int(json_obj["info"][0][4] / 1000)
+from types import SimpleNamespace
 
 
 def toasstime(sec):
@@ -21,21 +13,14 @@ def toasstime(sec):
 
 
 def intersect(old, new):
-    LEN = 1
-    SEC = 0
-    vel_old = (1280 + old[LEN] * 30) / 10
-    pos_old = vel_old * (new[SEC] - old[SEC]) - old[LEN] * 30
+    vel_old = (1280 + old.len * 30) / 10
+    pos_old = vel_old * (new.sec - old.sec) - old.len * 30
 
-    vel_new = (1280 + new[LEN] * 30) / 10
+    vel_new = (1280 + new.len * 30) / 10
     pos_new = 0
 
-    VEL = 0
-    POS = 1
-    oldp = [vel_old, pos_old]
-    newp = [vel_new, pos_new]
-
-    # if it old is ahead now and old is ahead at the end, then no intesect
-    if oldp[POS] > newp[POS] and oldp[POS] + oldp[VEL] * (10 - new[SEC] + old[SEC]) > newp[VEL] * (10 - new[SEC] + old[SEC]):
+    # if old is ahead of new and old is ahead at the end, then no intesect
+    if pos_old > pos_new and pos_old + vel_old * (10 - new.sec + old.sec) > vel_new * (10 - new.sec + old.sec):
         return False
     else:
         return True
@@ -54,7 +39,23 @@ def on_start(**kargs):
     start_timestamp = kargs['start_timestamp']
     savepath = kargs['savepath'] + '.ass'
     file = open(savepath, 'w', encoding='utf-8')
-    file.write(u"""
+
+
+def char_len(text):
+    length = 0
+    for c in text:
+        if unicodedata.east_asian_width(c) in ['W', 'F', 'A']:
+            length += 1
+        else:
+            length += 0.5
+    return length
+
+
+def on_danmaku(danmaku):
+    global file, onscreen, danmaku_count
+    log.info(f"{danmaku.user} sent {danmaku.text} in relative time {danmaku.timestamp - start_timestamp}")
+    if danmaku_count == 0:
+        file.write(u"""\
 [Script Info]
 ScriptType: v4.00+
 Collisions: Normal
@@ -70,52 +71,29 @@ Style: testStyle,WenQuanYi Micro Hei,30,&H00ffffff,&H00000000,&H00000000,&H00000
 Format: Layer, Start, End, Style, Actor, MarginL, MarginR, MarginV, Effect, Text
 """)
 
+    danmaku_count += 1
 
-def char_len(text):
-    length = 0
-    for c in text:
-        if unicodedata.east_asian_width(c) in ['W', 'F', 'A']:
-            length += 1
-        else:
-            length += 0.5
-    return length
-
-
-def on_danmaku(json_obj):
-    global file, onscreen, danmaku_count
-    danmaku = Danmaku(json_obj)
-    if danmaku.is_danmaku:
-        infos = {'user': danmaku.user, 'text': danmaku.text, 'relative_timestamp': danmaku.timestamp - start_timestamp}
-        log.info("{user} sent {text} in relative time {relative_timestamp}".format(**infos))
-        danmaku_count += 1
-
-        text = danmaku.text
-        sec = danmaku.timestamp - start_timestamp  # wait a sec, why does this work?
-        onscreen = {j: [data for data in onscreen[j] if sec - data[0] < 10]
-                    for j in range(21)}  # remove old off screen text
-        for j in range(21):  # 720/35 = 21 columns
-            for text_on_screen in onscreen[j]:
-                if intersect(text_on_screen, (sec, char_len(text))):
-                    break
-            else:  # no intersection found
-                column = j
-                onscreen[j].append((sec, char_len(text)))
+    text = danmaku.text
+    sec = danmaku.timestamp - start_timestamp  # wait a sec, why does this work?
+    onscreen = {j: [data for data in onscreen[j] if sec - data.sec < 10]
+                for j in range(21)}  # remove old off screen text
+    screen_record = SimpleNamespace(sec=sec, len=char_len(text))
+    for j in range(21):  # 720/35 = 21 columns
+        for text_on_screen in onscreen[j]:
+            if intersect(text_on_screen, screen_record):
                 break
-        else:
-            log.warning(f'cannot find a place for danmaku "{text}", ignored')
-            return
+        else:  # no intersection found
+            column = j
+            onscreen[j].append(screen_record)
+            break
+    else:
+        log.warning(f'cannot find a place for danmaku "{text}", ignored')
+        return
 
-        y = column * 35
-        end_x = -30 * char_len(text)
-        file.write('Dialogue: 0,')
-        file.write(toasstime(sec))
-        file.write(',')
-        file.write(toasstime(sec + 10))
-        file.write(
-            ',testStyle,,0000,0000,0000,,{\move(1280,%(y)d,%(end_x)d,%(y)d)}' % locals())
-        file.write(text)
-        file.write('\n')
-        file.flush()
+    y = column * 35
+    end_x = -30 * char_len(text)
+    file.write(f'Dialogue: 0,{toasstime(sec)},{toasstime(sec + 10)},testStyle,,0000,0000,0000,,{{\move(1280,{y},{end_x},{y})}}{text}\n')
+    file.flush()
 
 
 def on_end():

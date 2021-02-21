@@ -18,6 +18,14 @@ ACTION_HEARTBEAT_REPLY = 3
 ACTION_MESSAGE = 5
 ACTION_CONNECT_SUCCESS = 8
 
+
+class Danmaku:
+    def __init__(self, json_obj):
+        self.text = json_obj["info"][1]
+        self.user = json_obj["info"][2][1]
+        self.timestamp = int(json_obj["info"][0][4] / 1000)
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--room-id", action="store", dest="room_id", type=int, required=True)
 args, _ = parser.parse_known_args()
@@ -85,7 +93,7 @@ async def connect_once(room_id, on_danmaku):
                         elif op == 5:
                             json_data = json.loads(data[16:length].decode("utf-8"))
                             if json_data['cmd'] == "DANMU_MSG":
-                                on_danmaku(json_data)
+                                on_danmaku(Danmaku(json_data))
                         else:
                             log.info(f"unknown op:{op}")
                     data = data[length:]

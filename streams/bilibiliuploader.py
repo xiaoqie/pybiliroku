@@ -416,7 +416,7 @@ class BilibiliUploader():
         self.parts = parts
         self.max_chunk_retry = 100
         self.max_part_retry = 5
-        self.chunk_timeout = 15
+        self.chunk_timeout = 60
 
         with ThreadPoolExecutor(max_workers=thread_pool_workers) as tpe:
             t_list = []
