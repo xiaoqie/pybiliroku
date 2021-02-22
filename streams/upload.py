@@ -31,7 +31,6 @@ config = json.load(open("config.json"))
 today = datetime.date.today() - datetime.timedelta(days=1)
 
 videos = get_videos()
-unfinished_videos = videos_with(videos, _with=[".flv"])
 videos = videos_with(videos, _with=[".mp4"])
 videos = sum(videos.values(), [])
 
@@ -43,7 +42,7 @@ for date in uploaded_video_date:
         print(f"remove {folder}")
         shutil.rmtree(folder)
 
-if unfinished_videos:
+if list(Path("297").glob("*.flv")):
     print("some videos have not finished encoding")
     sys.exit()
     
