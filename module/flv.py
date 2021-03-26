@@ -10,7 +10,7 @@ savepath = None
 savepath_ass = None
 
 def on_start(**kargs):
-    global file, savepath
+    global file, savepath, savepath_ass
     savepath = kargs['savepath'] + '.flv'
     savepath_ass = kargs['savepath'] + '.ass'
     file = open(savepath, 'wb')

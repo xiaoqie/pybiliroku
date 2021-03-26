@@ -39,6 +39,22 @@ def on_start(**kargs):
     start_timestamp = kargs['start_timestamp']
     savepath = kargs['savepath'] + '.ass'
     file = open(savepath, 'w', encoding='utf-8')
+    file.write(u"""\
+[Script Info]
+ScriptType: v4.00+
+Collisions: Normal
+PlayResX: 1280
+PlayResY: 720
+Timer: 100.0000
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: testStyle,WenQuanYi Micro Hei,30,&H00ffffff,&H00000000,&H00000000,&H00000000,-1,0,0,0,100,100,0,0.00,1,2,0,7,0,0,0,0
+
+[Events]
+Format: Layer, Start, End, Style, Actor, MarginL, MarginR, MarginV, Effect, Text
+""")
+    file.flush()
 
 
 def char_len(text):
@@ -54,22 +70,6 @@ def char_len(text):
 def on_danmaku(danmaku):
     global file, onscreen, danmaku_count
     log.info(f"{danmaku.user} sent {danmaku.text} in relative time {danmaku.timestamp - start_timestamp}")
-    if danmaku_count == 0:
-        file.write(u"""\
-[Script Info]
-ScriptType: v4.00+
-Collisions: Normal
-PlayResX: 1280
-PlayResY: 720
-Timer: 100.0000
-
-[V4+ Styles]
-Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: testStyle,WenQuanYi Micro Hei,30,&H00ffffff,&H00000000,&H00000000,&H00000000,-1,0,0,0,100,100,0,0.00,1,2,0,7,0,0,0,0
-
-[Events]
-Format: Layer, Start, End, Style, Actor, MarginL, MarginR, MarginV, Effect, Text
-""")
 
     danmaku_count += 1
 

@@ -52,9 +52,7 @@ def get_info(uid):
     if roomInitRes["msg"] != "ok":
         raise RuntimeError("failed request room_init")
     room_id = roomInitRes["data"]["room_id"]
-    playUrlRes = get_json_from(f"https://api.live.bilibili.com/room/v1/Room/playUrl?cid={room_id}&qn=10000&platform=web")
-    #playUrlRes = get_json_from(f"https://api.live.bilibili.com/xlive/web-room/v1/index/getRoomPlayInfo?room_id={room_id}&play_url=1&mask=1&qn=0&platform=web")
-    #playUrlRes['data'] = playUrlRes['data']['play_url']
+    playUrlRes = get_json_from(f"https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?room_id={room_id}&no_playurl=0&mask=1&qn=10000&platform=web&protocol=0,1&format=0&codec=0,1")
     baseInfoRes = get_json_from(f"https://api.live.bilibili.com/room/v1/Room/get_info?room_id={room_id}&from=room")
     return {'roomInitRes': roomInitRes, 'playUrlRes': playUrlRes, 'baseInfoRes': baseInfoRes}
 
@@ -95,24 +93,18 @@ room_id = info['roomInitRes']['data']['room_id']
 short_id = info['roomInitRes']['data']['short_id']
 uid = info['roomInitRes']['data']['uid']
 is_living = info['baseInfoRes']['data']['live_status'] == 1
-#flv_url = random.choice(info['playUrlRes']['data']["durl"])["url"] if "playUrlRes" in info else None
-flv_url = info['playUrlRes']['data']["durl"][-1]["url"] if "playUrlRes" in info else None
-current_qn = info['playUrlRes']['data']["current_qn"] if "playUrlRes" in info else None
-title = info['baseInfoRes']['data']['title'].replace('/', 'or').replace(' ', '_')
-log.info(f"roomID: {room_id}, title: {title}, qn: {current_qn}, flvURL: {flv_url}")
-
 if not is_living:
-    log.verbose("UID:%s, Room ID:%s is not streaming, waiting for 30 seconds and closing." % (
-        uid, original_room_id))
+    log.info(f"UID:{uid}, Room ID:{original_room_id} is not streaming, waiting for 30 seconds and closing.")
     # The sleep logic comes here, not in roku_loop.py
     # Because if it is streaming, we shouldn't wait to restart.
     time.sleep(30)
     quit()
+codec = info['playUrlRes']['data']['playurl_info']['playurl']["stream"][0]["format"][0]["codec"][0];
+flv_url = codec["url_info"][0]["host"] + codec["base_url"] + codec["url_info"][0]["extra"]
+current_qn = codec["current_qn"]
+title = info['baseInfoRes']['data']['title'].replace('/', 'or').replace(' ', '_')
+log.info(f"roomID: {room_id}, title: {title}, qn: {current_qn}, flvURL: {flv_url}")
 
-#if room_id == 1004 and current_qn == 10000:
-    # a dirty hack. bilibili cdn cannot stream 7500kbps to my server?
-#    time.sleep(1)
-#    raise RuntimeError("It seems that we cannot record qn=10000.")
 
 start_timestamp = time.time()
 savepath = savepath.format(**globals())
@@ -126,7 +118,7 @@ async def main():
     try:
         await download_flv(flv_url)
         danmaku_task.cancel()
-        # only hardware malfunctions could achieve this line of code, i guess
+        # only hardware malfunctions could lead to this line of code, i guess
         log.error("while True ended without exception, WHAAAAT?!")
     except Exception as e:
         raise
