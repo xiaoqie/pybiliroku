@@ -105,7 +105,7 @@ class Video:
 
         return ret
 
-def get_videos() -> Dict[datetime.date, List[Video]]:
+def get_videos(room_id) -> Dict[datetime.date, List[Video]]:
     def combine_videos(videos: List[Video]):
         """
         combine videos with the same name but with different exts
@@ -119,8 +119,8 @@ def get_videos() -> Dict[datetime.date, List[Video]]:
         return list(name_to_video.values())
 
     date_to_videos: Dict[datetime.date, List[Video]] = defaultdict(list)
-    for filename in sorted(os.listdir("297")):
-        filepath = "297/" + filename
+    for filename in sorted(os.listdir(f"{room_id}")):
+        filepath = f"{room_id}/{filename}"
         if os.path.isdir(filepath):
             continue
         video = Video.from_filename(filename)

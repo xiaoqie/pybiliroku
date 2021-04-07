@@ -338,13 +338,16 @@ class BilibiliUploader():
                 'file': (os.path.basename(local_file_name), chunk_data, 'application/octet-stream')
             }
 
+            n_remaining_parts = len(self.parts) - len([p for p in self.parts if p.progress[0] == p.progress[1]])
+            n_concurrent_parts = min(n_remaining_parts, self.thread_pool_workers)
+
             r = requests.post(
                 url=upload_url,
                 files=files,
                 cookies={
                     'PHPSESSID': server_file_name
                 },
-                timeout=self.chunk_timeout
+                timeout=self.chunk_timeout * n_concurrent_parts
             )
 
             if not (r.status_code == 200 and r.json()['OK'] == 1):
@@ -408,15 +411,17 @@ class BilibiliUploader():
                no_reprint: int = 0,
                open_elec: int = 1,
                max_retry: int = 5,
-               thread_pool_workers: int = 1):
+               thread_pool_workers: int = 1,
+               timeout: int = 5):
 
         if not isinstance(parts, list):
             parts = [parts]
 
         self.parts = parts
         self.max_chunk_retry = 100
-        self.max_part_retry = 5
-        self.chunk_timeout = 60
+        self.max_part_retry = max_retry
+        self.chunk_timeout = timeout
+        self.thread_pool_workers = thread_pool_workers
 
         with ThreadPoolExecutor(max_workers=thread_pool_workers) as tpe:
             t_list = []

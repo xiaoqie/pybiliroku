@@ -30,7 +30,7 @@ def upload(video_list, title):
 config = json.load(open("config.json"))
 today = datetime.date.today() - datetime.timedelta(days=1)
 
-videos = get_videos()
+videos = get_videos(297)
 videos = videos_with(videos, _with=[".mp4"])
 videos = sum(videos.values(), [])
 

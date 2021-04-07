@@ -4,7 +4,7 @@ import datetime
 from collections import defaultdict
 from utils import *
 
-videos = get_videos()
+videos = get_videos(297)
 videos = videos_with(videos, _with=[".flv", ".ass"], _without=[".mp4"])
 if videos.items():
     video_list = list(videos.values())[0]
@@ -25,7 +25,7 @@ if videos.items():
         #bitrate = '2000k'
         scale = '-1:1080'
         bitrate = '3000k'
-        cmd = f'{ffmpeg} -analyzeduration 2147483647 -probesize 2147483647 -y -f live_flv -i "{video.path_without_ext}.flv" -vf "subtitles=temp.ass, scale={scale}" -c:v libx264 -preset veryfast -b:v {bitrate} -c:a aac -b:a 128k -r 30 -max_muxing_queue_size 20000 "{video.path_without_ext}.mp4"'
+        cmd = f'{ffmpeg} -analyzeduration 2147483647 -probesize 2147483647 -y -f live_flv -i "{video.path_without_ext}.flv" -vf "subtitles=temp.ass, scale={scale}" -c:v libx264 -preset superfast -b:v {bitrate} -c:a aac -b:a 128k -r 30 -max_muxing_queue_size 20000 "{video.path_without_ext}.mp4"'
         print(cmd)
         ret_code = os.system(cmd)
         if ret_code != 0:
