@@ -8,6 +8,17 @@ from bilibiliuploader import BilibiliUploader, VideoPart
 from utils import *
 
 
+if len(sys.argv) < 2:
+    print("room id required")
+    sys.exit()
+room_id = sys.argv[1]
+config = get_config(room_id)
+if config['night']:
+    today = datetime.date.today() - datetime.timedelta(days=1)
+else:
+    today = datetime.date.today()
+
+
 def get_json_from(url):
     req = urllib.request.Request(url)
     with urllib.request.urlopen(req, timeout=5) as conn:
@@ -22,27 +33,32 @@ def upload(video_list, title):
     pprint([video.video_name for video in video_list])
 
     uploader = BilibiliUploader()
-    uploader.login_by_access_token_file("bilibili_token.json")
+    uploader.login_by_access_token_file(config["token_file"])
+    uploader.do_token_refresh()
+    uploader.save_login_data(file_name=config["token_file"])
     video_parts = [VideoPart(path=f"{video.path_without_ext}.mp4", title=f"{video.video_name}") for video in video_list]
-    uploader.upload(parts=video_parts, title=title, tid=17, tag="lolo直播录像", desc='https://live.bilibili.com/297', copyright=1, thread_pool_workers=5, max_retry=10)
+    uploader.upload(parts=video_parts, 
+            title=title, 
+            tid=17, 
+            tag=config['tag'], 
+            desc='lolo直播间：https://live.bilibili.com/297\n爱莉直播间：https://live.bilibili.com/8054378', 
+            copyright=1, 
+            thread_pool_workers=5)
 
 
-config = json.load(open("config.json"))
-today = datetime.date.today() - datetime.timedelta(days=1)
-
-videos = get_videos(297)
+videos = get_videos(int(room_id))
 videos = videos_with(videos, _with=[".mp4"])
 videos = sum(videos.values(), [])
 
 uploaded_video_info = get_json_from(f"https://api.bilibili.com/x/space/arc/search?mid={config['bilibili_mid']}&ps=30&tid=0&pn=1&keyword=&order=pubdate&jsonp=jsonp")
-uploaded_video_date = [datetime.datetime.strptime(v['title'][1:len('1970-01-01') + 1], '%Y-%m-%d').date() for v in uploaded_video_info['data']['list']['vlist']]
-for date in uploaded_video_date:
-    folder = Path("297") / date.strftime('%Y-%m-%d')
+uploaded_video_titles = [v['title'].replace("/", "|").replace(" ", "_") for v in uploaded_video_info['data']['list']['vlist']]
+for t in uploaded_video_titles:
+    folder = Path(room_id) / t
     if folder.exists() and folder.is_dir():
         print(f"remove {folder}")
         shutil.rmtree(folder)
 
-if list(Path("297").glob("*.flv")):
+if list(Path(room_id).glob("*.flv")):
     print("some videos have not finished encoding")
     sys.exit()
     
@@ -52,13 +68,13 @@ if last_uploaded_video_date >= today:
     sys.exit()
 
 print(f"{today} is ready to upload")
-title = f"【{today.strftime('%Y-%m-%d')}】{'＋'.join([t.replace('！', '') for t in list(dict.fromkeys([v.title for v in videos]))])}"
+title = f"【{today.strftime('%Y-%m-%d')} {config['name']}】{'＋'.join([t.replace('！', '') for t in list(dict.fromkeys([v.title for v in videos]))])}"
 upload(videos, title)
 
 config['last_uploaded_video_date'] = today.strftime('%Y-%m-%d')
-json.dump(config, open("config.json", "w"), indent=4)
+save_config(room_id, config)
 
-uploaded_folder = Path("297") / today.strftime('%Y-%m-%d')
+uploaded_folder = Path(room_id) / title.replace("/", "|").replace(" ", "_")
 uploaded_folder.mkdir()
 for video in videos:
     videopath = Path(f"{video.path_without_ext}.mp4")

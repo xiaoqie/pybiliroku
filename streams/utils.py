@@ -2,6 +2,7 @@ import os
 import subprocess
 import datetime
 import sys
+import json
 from typing import *
 from collections import defaultdict
 import shutil
@@ -50,14 +51,26 @@ class Video:
     datetime: datetime.datetime
     streamer: str
     stored_duration: float
+    stored_resolution: Tuple[int, int]
     
     @property
     def duration(self):
         if not ".mp4" in self.available_exts:
             return -1
         if not self.stored_duration:
-            self.stored_duration = float(command_output(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", f"{self.path_without_ext}.mp4"]))
+            self.stored_duration = get_duration(f"{self.path_without_ext}.mp4")
         return self.stored_duration
+
+    @property
+    def resolution(self):
+        if not self.stored_resolution:
+            if ".flv" in self.available_exts:
+                self.stored_resolution = get_resolution(f"{self.path_without_ext}.flv")
+            elif ".mp4" in self.available_exts:
+                self.stored_resolution = get_resolution(f"{self.path_without_ext}.mp4")
+            else:
+                self.stored_resolution = (-1, -1)
+        return self.stored_resolution
 
     def __str__(self):
         return f"""Video(video_name: {self.video_name}, available_exts: {self.available_exts}, path_without_ext: {self.path_without_ext}, datetime:{self.datetime}, title: {self.title}, date: {self.date}, time: {self.time}, streamer: {self.streamer})"""
@@ -73,6 +86,7 @@ class Video:
         self.date = None
         self.streamer = None
         self.stored_duration = None
+        self.stored_resolution = None
 
     @staticmethod
     def from_filename(filename: str):
@@ -155,7 +169,25 @@ def videos_with(videos: Union[Dict[datetime.date, List[Video]], List[Video]], *,
     else:
         raise Exception("Invalid argument `videos`")
 
+
 def get_duration(path):
     cmd = [ffprobe, '-i', path, '-show_entries', 'format=duration', '-v', 'quiet', '-of', 'csv=p=0']
     output = subprocess.check_output(cmd)
     return float(output)
+
+
+def get_resolution(path):
+    cmd = [ffprobe, '-i', path, '-show_entries', 'stream=width,height', '-v', 'quiet', '-of', 'csv=p=0:s=x']
+    output = subprocess.check_output(cmd).decode().strip()
+    components = output.split("x")
+    return (int(components[0]), int(components[1]))
+
+
+def get_config(id):
+    return json.load(open("config.json"))[id]
+
+
+def save_config(id, config):
+    full = json.load(open("config.json"))
+    full[id] = config
+    json.dump(full, open("config.json", "w"), indent=4)
