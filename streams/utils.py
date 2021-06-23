@@ -178,7 +178,8 @@ def get_duration(path):
 
 def get_resolution(path):
     cmd = [ffprobe, '-i', path, '-show_entries', 'stream=width,height', '-v', 'quiet', '-of', 'csv=p=0:s=x']
-    output = subprocess.check_output(cmd).decode().strip()
+    output = subprocess.check_output(cmd).decode()
+    output = output.strip().split("\n")[0]
     components = output.split("x")
     return (int(components[0]), int(components[1]))
 

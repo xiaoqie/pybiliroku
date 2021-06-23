@@ -136,6 +136,7 @@ class BilibiliUploader():
     def __init__(self):
         self.access_token = None
         self.refresh_token = None
+        self.expires_in = None
         self.sid = None
         self.mid = None
         self.parts = None
@@ -188,49 +189,6 @@ class BilibiliUploader():
         self.sid = sid
         self.mid = login_data['mid']
 
-    def do_token_refresh(self):
-        """
-        bilibili login.
-        Args:
-            username: plain text username for bilibili.
-            password: plain text password for bilibili.
-        """
-        hash, pubkey, sid = get_key()
-
-        post_data = {
-            'access_token': self.access_token,
-            'appkey': APPKEY,
-            'refresh_token': self.refresh_token,
-            'platform': "pc",
-            'ts': str(int(datetime.now().timestamp())),
-        }
-
-        post_data['sign'] = cipher.sign_dict(post_data, APPSECRET)
-
-        headers = {
-            'Connection': 'keep-alive',
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            'User-Agent': '',
-            'Accept-Encoding': 'gzip,deflate',
-        }
-
-        r = requests.post(
-            "https://passport.bilibili.com/api/oauth2/refreshToken",
-            headers=headers,
-            data=post_data,
-            cookies={
-                'sid': sid
-            }
-        )
-        print(r.json())
-
-        login_data = r.json()['data']
-        
-        self.access_token = login_data['access_token']
-        self.refresh_token = login_data['refresh_token']
-        self.sid = sid
-        self.mid = login_data['mid']
-
     def login_by_access_token(self, access_token, refresh_token=None):
         """
         bilibili access token login.
@@ -260,12 +218,12 @@ class BilibiliUploader():
             headers=headers,
             params=login_params
         )
-        print(r.json())
 
         login_data = r.json()['data']
 
         self.sid = r.cookies['sid']
         self.mid = login_data['mid']
+        self.expires_in = login_data['expires_in']
 
     def login_by_access_token_file(self, file_name):
         with open(file_name, "r") as f:

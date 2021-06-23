@@ -1,11 +1,9 @@
 # -*- coding:utf-8 -*-
 import argparse
 import asyncio
-import atexit
 import datetime
 import json
 import os
-import signal
 import sys
 import time
 import urllib.request
@@ -94,11 +92,8 @@ short_id = info['roomInitRes']['data']['short_id']
 uid = info['roomInitRes']['data']['uid']
 is_living = info['baseInfoRes']['data']['live_status'] == 1
 if not is_living:
-    log.info(f"UID:{uid}, Room ID:{original_room_id} is not streaming, waiting for 30 seconds and closing.")
-    # The sleep logic comes here, not in roku_loop.py
-    # Because if it is streaming, we shouldn't wait to restart.
-    time.sleep(30)
-    quit()
+    log.info(f"Room ID {room_id} is not live")
+    sys.exit(61)  # exit code 61 means to wait
 codec = info['playUrlRes']['data']['playurl_info']['playurl']["stream"][0]["format"][0]["codec"][0];
 flv_url = codec["url_info"][0]["host"] + codec["base_url"] + codec["url_info"][0]["extra"]
 current_qn = codec["current_qn"]

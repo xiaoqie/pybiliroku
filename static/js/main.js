@@ -17,6 +17,19 @@ function toHHMMSS(sec_num) {
 
 $('select').material_select();
 $('.modal').modal();
+
+function update_disk_usage() {
+    $.get({
+        type: "get",
+        url: `/get_disk_usage`,
+        dataType: 'json',
+        async: true,
+        success: function (data) {
+            $(".disk").html(`${formatBytes(data['used'], 1)}/${formatBytes(data['total'], 1)}`)
+        }
+    });
+}
+
 function openRoom(room_id) {
     $.get("/open?room_id=" + room_id, function (data) {
         Materialize.toast(data, 5000)
@@ -237,12 +250,5 @@ function update() {
 }
 setInterval(update, 1000)
 update() // update manually once
-$.get({
-    type: "get",
-    url: `/get_disk_usage`,
-    dataType: 'json',
-    async: true,
-    success: function (data) {
-        $(".disk").html(`${formatBytes(data['used'], 1)}/${formatBytes(data['total'], 1)}`)
-    }
-});
+setInterval(update_disk_usage, 60000)
+update_disk_usage()

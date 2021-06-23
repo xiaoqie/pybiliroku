@@ -34,8 +34,8 @@ def upload(video_list, title):
 
     uploader = BilibiliUploader()
     uploader.login_by_access_token_file(config["token_file"])
-    uploader.do_token_refresh()
-    uploader.save_login_data(file_name=config["token_file"])
+    #uploader.do_token_refresh()
+    #uploader.save_login_data(file_name=config["token_file"])
     video_parts = [VideoPart(path=f"{video.path_without_ext}.mp4", title=f"{video.video_name}") for video in video_list]
     uploader.upload(parts=video_parts, 
             title=title, 
@@ -57,6 +57,10 @@ for t in uploaded_video_titles:
     if folder.exists() and folder.is_dir():
         print(f"remove {folder}")
         shutil.rmtree(folder)
+
+if not videos:
+    print("no videos to upload")
+    sys.exit()
 
 if list(Path(room_id).glob("*.flv")):
     print("some videos have not finished encoding")

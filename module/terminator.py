@@ -11,7 +11,7 @@ request_args = {"--terminate": {
     'default': 0
 }}
 
-segment_time = 1800
+segment_time = 0
 start_timestamp = 0
 
 def on_start(**kargs):
