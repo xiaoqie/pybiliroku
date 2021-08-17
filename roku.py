@@ -8,6 +8,7 @@ import sys
 import time
 import urllib.request
 import random
+from addict import Dict
 
 import danmaku
 import modules
@@ -46,13 +47,18 @@ def get_json_from(url):
 
 
 def get_info(uid):
-    roomInitRes = get_json_from(f"https://api.live.bilibili.com/room/v1/Room/room_init?id={uid}")
-    if roomInitRes["msg"] != "ok":
-        raise RuntimeError("failed request room_init")
-    room_id = roomInitRes["data"]["room_id"]
-    playUrlRes = get_json_from(f"https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?room_id={room_id}&no_playurl=0&mask=1&qn=10000&platform=web&protocol=0,1&format=0&codec=0,1")
-    baseInfoRes = get_json_from(f"https://api.live.bilibili.com/room/v1/Room/get_info?room_id={room_id}&from=room")
-    return {'roomInitRes': roomInitRes, 'playUrlRes': playUrlRes, 'baseInfoRes': baseInfoRes}
+    #roomInitRes = get_json_from(f"https://api.live.bilibili.com/room/v1/Room/room_init?id={uid}")
+    #if roomInitRes["msg"] != "ok":
+    #    raise RuntimeError("failed request room_init")
+    #room_id = roomInitRes["data"]["room_id"]
+    baseInfoRes = Dict(get_json_from(f"https://api.live.bilibili.com/room/v1/Room/get_info?room_id={room_id}&from=room"))
+    if baseInfoRes.code != 0:
+        raise RuntimeError("failed request baseInfoRes")
+    playUrlRes = Dict(get_json_from(f"https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?room_id={room_id}&no_playurl=0&mask=1&qn=0&platform=web&protocol=0&format=0&codec=0"))
+    if playUrlRes.code != 0:
+        raise RuntimeError("failed request playUrlRes")
+    playUrlRes.data.title = baseInfoRes.data.title
+    return playUrlRes.data
 
 
 async def download_flv(flv_url):
@@ -87,17 +93,17 @@ async def download_flv(flv_url):
 
 log.verbose("Starting.")
 info = get_info(room_id)
-room_id = info['roomInitRes']['data']['room_id']
-short_id = info['roomInitRes']['data']['short_id']
-uid = info['roomInitRes']['data']['uid']
-is_living = info['baseInfoRes']['data']['live_status'] == 1
+room_id = info.room_id
+short_id = info.short_id
+uid = info.uid
+is_living = info.live_status == 1
 if not is_living:
     log.info(f"Room ID {room_id} is not live")
     sys.exit(61)  # exit code 61 means to wait
-codec = info['playUrlRes']['data']['playurl_info']['playurl']["stream"][0]["format"][0]["codec"][0];
-flv_url = codec["url_info"][0]["host"] + codec["base_url"] + codec["url_info"][0]["extra"]
-current_qn = codec["current_qn"]
-title = info['baseInfoRes']['data']['title'].replace('/', 'or').replace(' ', '_')
+codec = info.playurl_info.playurl.stream[0].format[0].codec[0];
+flv_url = codec.url_info[0].host + codec.base_url + codec.url_info[0].extra
+current_qn = codec.current_qn
+title = info.title.replace('/', 'or').replace(' ', '_')
 log.info(f"roomID: {room_id}, title: {title}, qn: {current_qn}, flvURL: {flv_url}")
 
 

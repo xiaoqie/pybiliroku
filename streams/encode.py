@@ -4,6 +4,7 @@ import datetime
 from collections import defaultdict
 from utils import *
 
+
 if len(sys.argv) < 2:
     print("room id required")
     sys.exit()
@@ -23,7 +24,11 @@ if videos.items():
             bitrate = '3000k'
         else:
             bitrate = '2000k'
-        cmd = f'{ffmpeg} -analyzeduration 2147483647 -probesize 2147483647 -y -f flv -i "{video.path_without_ext}.flv" -vf "subtitles={video.path_without_ext}.ass" -c:v libx264 -preset superfast -b:v {bitrate} -c:a aac -b:a 128k -r 30 -max_muxing_queue_size 20000 "{video.path_without_ext}.mp4"'
+        if resolution[0] > resolution[1]:
+            input_format = 'live_flv'
+        else:
+            input_format = 'flv'
+        cmd = f'{ffmpeg} -analyzeduration 2147483647 -probesize 2147483647 -y -f {input_format} -i "{video.path_without_ext}.flv" -vf "subtitles=\\\'{video.path_without_ext}.ass\\\'" -c:v libx264 -preset superfast -b:v {bitrate} -c:a aac -b:a 128k -r 30 -max_muxing_queue_size 20000 "{video.path_without_ext}.mp4"'
         print(cmd)
         ret_code = os.system(cmd)
         if ret_code != 0:
